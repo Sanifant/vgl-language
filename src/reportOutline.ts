@@ -14,7 +14,7 @@ export class ReportOutlineProvider implements vscode.TreeDataProvider<Routine> {
         vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
         console.time("executionTime"); 
         this.nodes = new Array();
-        this.routinePattern = /(?<!END)(routine|ROUTINE)\s+(?<routineName>[a-z_]*)\s\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\)/g;
+        this.routinePattern = /(?<!END)(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
         //this.parseDocument();
         this.onActiveEditorChanged();
 	}

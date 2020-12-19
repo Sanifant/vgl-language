@@ -3,6 +3,7 @@
 	"displayName": "VGL Language",
 	"description": "SampleManager support extension",
 	"version": "0.0.1",
+	"publisher": "",
 	"engines": {
 		"vscode": "^1.52.0"
 	},

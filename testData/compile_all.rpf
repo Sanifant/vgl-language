@@ -1,0 +1,180 @@
+{******************************************************************************
+*
+* Module Name   : compile_all.rpf
+*
+* Purpose       : compiles all syntaxes , calculation and limit_calculations.
+*
+* Document Ref. :
+*
+* Specification :
+*
+* Portability   :
+*
+* Re-entrant    : Yes
+*
+*"LIBRARY_REPORT"
+"LIBRARY_CALCULATION"
+"LIBRARY_LIMIT_CALCULATION"
+"LIBRARY_SYNTAX"
+"LIBRARY_SIG_FIGS"
+"LIBRARY_LIST_RESULT"
+
+*******************************************************************************}
+SET COMPILE_OPTION DECLARE
+
+SET NAME "DISPLAY/"
+
+enable windows
+JOIN LIBRARY $LIB_UTILS
+JOIN STANDARD_LIBRARY STD_WINDOW
+JOIN STANDARD_LIBRARY STD_VGL
+
+{------------------------------------------------------------------------------}
+{main}
+
+   compile_calculations()
+   compile_syntaxes()
+   compile_limit_calculations()
+   compile_sig_figs()
+   compile_list_result()
+
+EXIT
+
+{------------------------------------------------------------------------------}
+
+ROUTINE compile_syntaxes
+
+   DECLARE syn_id, compiled
+
+   syn_id = SELECT syntax.identity
+             WHERE removeflag = FALSE
+
+   WHILE ( syn_id <> EMPTY ) DO
+
+     compiled = vgl_compile_vgl ( LIBRARY_syntax,
+                                  syn_id,
+                                  TRUE)
+
+     IF NOT(compiled) THEN
+       flash_message(syn_id:" failed to compile", true)
+     ELSE
+       window_set_status ( "Compiled - ":syn_id )
+     ENDIF
+
+     NEXT syntax
+
+     syn_id = SELECT syntax.identity
+
+   ENDWHILE
+
+ENDROUTINE
+
+{------------------------------------------------------------------------------}
+
+ROUTINE compile_limit_calculations
+
+   DECLARE clc, compiled
+
+   clc = SELECT limit_calculation.identity
+                WHERE removeflag = FALSE
+   WHILE ( clc <> EMPTY ) DO
+
+     compiled = vgl_compile_vgl ( LIBRARY_LIMIT_CALCULATION,
+                                  clc,
+                                  TRUE)
+
+     IF NOT(compiled) THEN
+       flash_message(clc:" failed to compile", true)
+     ENDIF
+
+     NEXT limit_calculation
+
+     clc = SELECT limit_calculation.identity
+
+   ENDWHILE
+
+ENDROUTINE
+
+{------------------------------------------------------------------------------}
+
+ROUTINE compile_calculations
+
+   DECLARE calc_name, compiled
+
+   calc_name = SELECT calculation.identity
+                WHERE removeflag = FALSE
+   WHILE ( calc_name <> EMPTY ) DO
+
+     compiled = vgl_compile_vgl ( LIBRARY_CALCULATION,
+                                  CALC_NAME,
+                                  TRUE)
+
+     IF NOT(compiled) THEN
+       flash_message(calc_name:" failed to compile", true)
+     ELSE
+       window_set_status ( "Compiled - ":calc_name )
+     ENDIF
+
+     NEXT calculation
+
+     calc_name = SELECT calculation.identity
+
+   ENDWHILE
+
+ENDROUTINE
+
+{------------------------------------------------------------------------------}
+
+ROUTINE compile_sig_figs
+
+   DECLARE sf_id, compiled
+
+   sf_id = SELECT sig_figs.identity
+             WHERE removeflag = FALSE
+
+   WHILE ( sf_id <> EMPTY ) DO
+
+     compiled = vgl_compile_vgl ( LIBRARY_sig_figs,
+                                  sf_id,
+                                  TRUE)
+
+     IF NOT(compiled) THEN
+       flash_message(sf_id:" failed to compile", true)
+     ENDIF
+
+     NEXT sig_figs
+
+     sf_id = SELECT sig_figs.identity
+
+   ENDWHILE
+
+ENDROUTINE
+
+{------------------------------------------------------------------------------}
+
+ROUTINE compile_list_result
+
+   DECLARE lr_id, compiled
+
+   lr_id = SELECT list_result_format . Identity
+             WHERE removeflag = FALSE
+
+   WHILE ( lr_id <> EMPTY ) DO
+
+     compiled = vgl_compile_vgl ( LIBRARY_LIST_RESULT,
+                                  lr_id,
+                                  TRUE)
+
+     IF NOT(compiled) THEN
+       flash_message(lr_id:" failed to compile", true)
+     ENDIF
+
+     NEXT list_result_format
+
+     lr_id = SELECT list_result_format .identity
+
+   ENDWHILE
+
+ENDROUTINE
+
+{------------------------------------------------------------------------------}

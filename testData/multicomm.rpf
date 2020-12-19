@@ -1,0 +1,1166 @@
+{*****************************************************************************
+*
+* Module Name   : MULTICOMM
+* 
+* Purpose       : Objects version of $INTCOMM allowing committing between
+*                 committed tables as well as from active to any committed
+*                 table
+*
+* Document Ref. : 
+*
+* Specification : 
+*
+******************************************************************************
+* Modification History
+* 
+* Version   Date        Author           Modify Details
+******************************************************************************
+* 1.0       01/01/1997  <Author Name>    Created
+******************************************************************************}
+
+SET COMPILE_OPTION DECLARE
+ENABLE WINDOWS
+
+JOIN STANDARD_LIBRARY STD_UTILS
+JOIN STANDARD_LIBRARY STD_CLASS
+JOIN STANDARD_LIBRARY STD_FLAGS
+JOIN STANDARD_LIBRARY STD_PROMPT
+JOIN STANDARD_LIBRARY std_window
+
+JOIN LIBRARY $LIB_UTILS
+JOIN LIBRARY $INSTALL_WINDOW
+
+CONSTANT space_80 = "                                        " :
+                    "                                        "
+CONSTANT space_60 = "                              " :
+                    "                              "
+CONSTANT space_50 = "                                                  "
+
+SET NAME "DEFER/"
+
+SET NOTPROTECTED
+
+{*****************************************************************************
+ *                               MAIN CODE                                   *
+ *****************************************************************************}
+DECLARE source_sets, dest_sets, source_table
+DECLARE source, destination
+DECLARE table_set_count, default_destination
+DECLARE sample_bar, test_bar, result_bar
+DECLARE table_form, screen_box, option_box1, option_box2, option_box3
+DECLARE sample_table, job_table, test_table, result_table
+
+ARRAY source_sets
+ARRAY dest_sets
+ARRAY source_table
+
+table_set_count = 0
+source = "ACTIVE"
+default_destination = GLOBAL("COMMITTED_TABLE_SET")
+destination = GLOBAL("COMMITTED_TABLE_SET")
+
+find_table_sets()
+
+set_up_install_window_class ()
+
+CREATE OBJECT INSTALL_WINDOW_CLASS, sample_bar
+CREATE OBJECT INSTALL_WINDOW_CLASS, test_bar
+CREATE OBJECT INSTALL_WINDOW_CLASS, result_bar
+
+make_table_form ( )
+
+create_message_boxs()
+
+screen_box . start_prompt ( )
+
+source_dest ()
+
+set_tables ()
+
+create_menu()
+
+screen_box . end_prompt   ( )
+
+SET GLOBAL "COMMITTED_TABLE_SET" to default_destination
+
+EXIT
+
+{*****************************************************************************
+ *                                 ROUTINES                                  *
+ *****************************************************************************}
+
+{*****************************************************************************}
+
+ROUTINE make_table_form
+
+{
+*
+* create the form object for to/from table selection
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE source_db, dest_db
+
+    CREATE OBJECT PROMPT_CLASS_FORM , table_form
+
+    table_form . header = "Select Table Sets"
+    table_form . footer = "Press <DO> to save / <Exit> to quit"
+    table_form . height               = 2
+    table_form . width                = GLOBAL("SCREEN_WIDTH") - 4
+    table_form . row                  = 10
+    table_form . column               = 3
+    table_form . border               = TRUE
+    table_form . confirm_required     = TRUE
+    table_form . return_behaviour     = FORM_RETURN_WRAP
+
+    PROMPT OBJECT source_db
+           AT 34,1
+           CHOOSE OUTOF source_sets
+
+    table_form . add_prompt ( source_db )
+    table_form . prompt_objects[1] . value = ""
+
+    PROMPT OBJECT dest_db
+           AT 34,2
+           CHOOSE OUTOF dest_sets
+
+    table_form . add_prompt ( dest_db )
+    table_form . prompt_objects[2] . value = ""
+
+    table_form . add_display ( "Commit Source Table             " ,
+                             2                     ,
+                             1                     ,
+                             PROMPT_RENDITION_NORMAL + PROMPT_RENDITION_RAISED )
+
+    table_form . add_display ( "Commit Destination Table        " ,
+                             2                     ,
+                             2                     ,
+                             PROMPT_RENDITION_NORMAL + PROMPT_RENDITION_RAISED )
+
+ENDROUTINE { make_table_form }
+
+{*****************************************************************************}
+
+ROUTINE source_dest
+
+{
+*
+* execute form to retreive the source and destination table sets
+* Parameters:  source - passed as a default local global
+*              destination - passed as a default local global
+* Return Value: None
+*
+******************************************************************************}
+
+    table_form . start_prompt ( )
+    table_form . wait_prompt  ( )
+    IF ( table_form . get_lastkey ( ) = "EXIT" ) THEN
+        EXIT
+    ENDIF
+    table_form . end_prompt   ( )
+
+    source      = table_form . prompt_objects[1] . text
+    destination = table_form . prompt_objects[2] . text
+    SET GLOBAL "COMMITTED_TABLE_SET" to destination
+    destination = GLOBAL("COMMITTED_TABLE_SET")
+
+ENDROUTINE { source_dest }
+{*****************************************************************************}
+
+ROUTINE create_message_boxs
+
+{
+*
+* Define forms for message boxes
+* Parameters:  None
+* Return Value: screen_box - passed as default local global
+*               option_box1 - passed as default local global
+*               option_box2 - passed as default local global
+*               option_box3 - passed as default local global
+*
+******************************************************************************}
+    CREATE OBJECT PROMPT_CLASS_FORM , screen_box
+    CREATE OBJECT PROMPT_CLASS_FORM , option_box1
+    CREATE OBJECT PROMPT_CLASS_FORM , option_box2
+    CREATE OBJECT PROMPT_CLASS_FORM , option_box3
+
+    screen_box . height               = 20
+    screen_box . width                = 80
+    screen_box . row                  = 5
+    screen_box . column               = 1
+    screen_box . border               = TRUE
+
+    option_box1 . height               = 3
+    option_box1 . width                = 60
+    option_box1 . row                  = 17
+    option_box1 . column               = 10
+    option_box1 . border               = TRUE
+
+    option_box2 . height               = 3
+    option_box2 . width                = 33
+    option_box2 . row                  = 17
+    option_box2 . column               = 22
+    option_box2 . border               = TRUE
+
+    option_box3 . height               = 3
+    option_box3 . width                = 50
+    option_box3 . row                  = 17
+    option_box3 . column               = 15
+    option_box3 . border               = TRUE
+
+ENDROUTINE { create_message_boxs }
+
+{*****************************************************************************}
+
+ROUTINE create_menu
+
+{
+*
+* Selects the type of commit to be done
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE option_array, line
+
+    ARRAY option_array ARRAYSIZE(7,3)
+    option_array[1,1] = "*"
+    option_array[1,2] = "Select Commit Option"
+    option_array[2,1] = "1"
+    option_array[2,2] = "1 Commit by Date"
+    option_array[2,3] = "3"
+    option_array[3,1] = "2"
+    option_array[3,2] = "2 Commit by Sample Id"
+    option_array[3,3] = "4"
+    option_array[4,1] = "3"
+    option_array[4,2] = "3 Commit ALL cancelled samples"
+    option_array[4,3] = "5"
+    option_array[5,1] = "4"
+    option_array[5,2] = "4 Commit ALL authorised samples"
+    option_array[5,3] = "6"
+    option_array[6,1] = "5"
+    option_array[6,2] = "5 Commit by Job"
+    option_array[6,3] = "7"
+    option_array[7,1] = "6"
+    option_array[7,2] = "6 Commit ALL authorised jobs"
+    option_array[7,3] = "8"
+
+    CHOOSE line OUTOF option_array AT 22,8
+
+    IF LASTKEY = "EXIT" THEN EXIT ENDIF
+
+    IF line = 3 THEN
+        date_commit()
+    ELSEIF line = 4 THEN
+        single_sample_commit()
+    ELSEIF line = 5 THEN
+        cancelled_commit()
+    ELSEIF line = 6 THEN
+        authorised_commit()
+    ELSEIF line = 7 THEN
+        single_job_commit()
+    ELSEIF line = 8 THEN
+        authorised_job_commit()
+    ENDIF
+
+ENDROUTINE {create_menu}
+
+{*****************************************************************************}
+
+ROUTINE commit_samples ( VALUE required_status , VALUE last_date )
+
+{
+*
+* Sample Commit Routine
+* Parameters:  required_status - staus of sample to commit
+*              last_date - last date for samples to commit
+* Return Value: kin - key pressed
+*
+******************************************************************************}
+    DECLARE samp_counter , samp_array , sampid , loop_counter , user_message
+    DECLARE kin
+
+    user_message = GET_USER_MESSAGE ( "INTCOMM_DISPLAY_10" , 1 ) 
+
+    REPEAT
+
+        { Select a 'chunk' of a hundred or less samples to commit }
+
+        ARRAY samp_array ARRAY_SIZE ( 100 )
+        IF ( last_date = INTERVAL ( "0 00:00:00.00" ) ) THEN
+            sampid = SELECT 'sample_table'.id_numeric
+                     WHERE ( status = required_status )
+        ELSE
+            sampid = SELECT 'sample_table'.id_numeric
+                     WHERE ( ( status = required_status ) AND 
+                             ( login_date <= last_date  ) )
+        ENDIF
+
+        kin = KEYPRESSED
+        samp_counter = 0
+        WHILE ( ( sampid <> EMPTY    ) AND 
+                ( samp_counter < 100 ) AND 
+                ( kin = EMPTY        ) ) DO
+
+            IF ( sampid <> "         0" ) THEN
+                samp_counter = samp_counter +1
+                samp_array [ samp_counter ] = sampid
+            ENDIF
+
+            NEXT 'sample_table'
+            sampid = SELECT 'sample_table'.id_numeric
+            kin = KEYPRESSED
+
+        ENDWHILE
+
+        loop_counter = 1
+        WHILE ( ( loop_counter <= samp_counter ) AND ( kin = EMPTY ) ) DO
+
+
+        option_box1 . add_display ( user_message :
+                                    samp_array [ loop_counter ] ,
+                             1                     ,
+                             3                     ,
+                             PROMPT_RENDITION_NORMAL )
+
+            kin = KEYPRESSED
+            IF ( kin = EMPTY ) THEN
+                consign_sample ( samp_array[loop_counter], source, destination)
+            ENDIF        
+
+            loop_counter = loop_counter +1
+
+        ENDWHILE
+
+    UNTIL ( sampid = EMPTY ) OR ( kin <> EMPTY )
+
+RETURN ( kin )
+
+ENDROUTINE { commit_samples }
+
+{*****************************************************************************}
+
+ROUTINE date_commit
+
+{
+*
+* date commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE last_date, kin
+
+    option_box1 . add_display ( space_60            ,
+                             1                      ,
+                             3                      ,
+                             PROMPT_RENDITION_NORMAL )
+
+    REPEAT
+        PROMPT OBJECT option_box1 . prompt_objects[1]
+               AT 45,2
+               BROWSE ON date
+        option_box1 . prompt_objects[1] . value = ""
+
+        option_box1 . add_display ( GET_USER_MESSAGE("INTCOMM_PROM_1" ,1) ,
+                                 1                     ,
+                                 2                     ,
+                                 PROMPT_RENDITION_NORMAL )
+
+        option_box1 . start_prompt ( )
+        option_box1 . wait_prompt  ( )
+        last_date = DATE(option_box1 . prompt_objects[1] . text)
+        IF ( option_box1 . get_lastkey ( ) = "EXIT" ) THEN
+            option_box1 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+        IF last_date <> " " THEN
+            last_date = date(string(last_date))
+        ENDIF
+
+    UNTIL ((last_date <> " ") AND (last_date < now))
+
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             17                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_9", 1) ,
+                             25                    ,
+                             18                    ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    screen_box . start_prompt ( )
+
+    kin = commit_samples ( "A" , last_date )
+    IF ( kin = EMPTY ) THEN   
+        kin = commit_samples ( "X" , last_date )
+    ENDIF
+
+    option_box1 . end_prompt   ( )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . start_prompt ( )
+
+    RETURN
+
+ENDROUTINE { date_commit }
+
+{*****************************************************************************}
+
+ROUTINE single_sample_commit
+
+{
+*
+* Single sample commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE sampid
+
+    set sample_status "AX"
+
+    REPEAT
+        PROMPT OBJECT option_box2 . prompt_objects[1]
+               AT 19,2
+               BROWSE ON 'sample_table'
+        option_box2 . prompt_objects[1] . value = ""
+
+        option_box2 . add_display ( GET_USER_MESSAGE("INTCOMM_PROM_2" ,1) ,
+                                 1                     ,
+                                 2                     ,
+                                 PROMPT_RENDITION_NORMAL )
+
+        option_box2 . start_prompt ( )
+        option_box2 . wait_prompt  ( )
+        sampid = option_box2 . prompt_objects[1] . text
+        IF ( option_box2 . get_lastkey ( ) = "EXIT" ) THEN
+            option_box2 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+        IF sampid <> " " THEN
+            sampid = select 'sample_table'.id_numeric where id_numeric = sampid
+        ENDIF
+
+    UNTIL ((sampid <> " ") AND (sampid <> empty))
+
+    IF (select 'sample_table'.id_numeric) <> "         0" THEN
+        option_box2 . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_10" ,1) :
+                                 sampid ,
+                                 1                     ,
+                                 3                     ,
+                                 PROMPT_RENDITION_NORMAL )
+
+        option_box2 . start_prompt ( )
+
+        consign_sample ( sampid, source, destination)
+    ENDIF
+
+    option_box2 . end_prompt   ( )
+
+    RETURN
+
+ENDROUTINE { singel_sample_commit }
+
+{*****************************************************************************}
+
+ROUTINE cancelled_commit
+
+{
+*
+* Cancelled Commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE last_date
+
+    option_box3 . add_display ( space_50            ,
+                             1                      ,
+                             2                     ,
+                             PROMPT_RENDITION_NORMAL )
+    option_box3 . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_11", 1) ,
+                             2                     ,
+                             2                     ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    option_box3 . start_prompt ( )
+
+    REPEAT
+        prompt 
+
+        IF (lastkey = "EXIT") THEN
+            option_box3 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+    UNTIL lastkey = "DO"
+
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             17                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_9", 1) ,
+                             25                    ,
+                             18                    ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    screen_box . start_prompt ( )
+
+    last_date = INTERVAL( "0000 00:00:00.00" )
+    consign_date ( "X", last_date, source, destination )
+
+    option_box3 . end_prompt   ( )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . start_prompt ( )
+
+    RETURN
+
+ENDROUTINE { cancelled_commit }
+
+{*****************************************************************************}
+
+ROUTINE authorised_commit
+
+{
+*
+* Authorised Commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE last_date
+
+    option_box3 . add_display ( space_50            ,
+                             1                      ,
+                             2                     ,
+                             PROMPT_RENDITION_NORMAL )
+    option_box3 . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_12", 1) ,
+                             2                     ,
+                             2                     ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    option_box3 . start_prompt ( )
+
+    REPEAT
+        prompt
+
+        IF (lastkey = "EXIT") THEN
+            option_box3 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+    UNTIL lastkey = "DO"
+
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             17                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_9", 1) ,
+                             25                    ,
+                             18                    ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    screen_box . start_prompt ( )
+
+    last_date = INTERVAL( "0000 00:00:00.00" )
+    consign_date ( "A", last_date, source, destination )
+   
+    option_box3 . end_prompt   ( )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . start_prompt ( )
+
+    RETURN
+
+ENDROUTINE { authorised_commit }
+
+{*****************************************************************************}
+
+ROUTINE single_job_commit
+
+{
+*
+* Single Job Commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE jobid
+
+    set job_status "AX"
+
+    REPEAT
+        PROMPT OBJECT option_box2 . prompt_objects[1]
+               AT 14,2
+               BROWSE ON 'job_table'
+        option_box2 . prompt_objects[1] . value = ""
+
+        option_box2 . add_display ( "Get Job ID : "    ,
+                                 1                     ,
+                                 2                     ,
+                                 PROMPT_RENDITION_NORMAL )
+
+        option_box2 . start_prompt ( )
+        option_box2 . wait_prompt  ( )
+        jobid = option_box2 . prompt_objects[1] . text
+        IF ( option_box2 . get_lastkey ( ) = "EXIT" ) THEN
+            option_box2 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+        IF jobid <> " " THEN
+            jobid = SELECT 'job_table'.job_name WHERE job_name = jobid
+        ENDIF
+
+    UNTIL ((jobid <> " ") AND (jobid <> empty))
+
+    IF (select 'job_table'.job_name) <> "         0" THEN
+        option_box2 . add_display ( "Get Job ID : " : jobid ,
+                                 1                     ,
+                                 3                     ,
+                                 PROMPT_RENDITION_NORMAL )
+
+        option_box2 . start_prompt ( )
+
+        consign_job ( jobid, source, destination)
+    ENDIF
+
+    option_box2 . end_prompt   ( )
+
+RETURN
+
+ENDROUTINE {single_job_commit}
+
+{*****************************************************************************}
+
+ROUTINE authorised_job_commit
+
+{
+*
+* Authorised Commit
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+
+    option_box3 . add_display ( space_50            ,
+                             1                      ,
+                             2                     ,
+                             PROMPT_RENDITION_NORMAL )
+    option_box3 . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_12", 1) ,
+                             2                     ,
+                             2                     ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    option_box3 . start_prompt ( )
+
+    REPEAT
+        prompt
+
+        IF (lastkey = "EXIT") THEN
+            option_box3 . end_prompt   ( )
+            RETURN
+        ENDIF
+
+    UNTIL lastkey = "DO"
+
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             17                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . add_display ( GET_USER_MESSAGE("INTCOMM_DISPLAY_9", 1) ,
+                             25                    ,
+                             18                    ,
+                          PROMPT_RENDITION_INVERSE + PROMPT_RENDITION_BLINKING )
+    screen_box . start_prompt ( )
+
+    consign_job_auth ( "A", source, destination )
+   
+    option_box3 . end_prompt   ( )
+    screen_box . add_display ( space_80            ,
+                             1                     ,
+                             18                    ,
+                             PROMPT_RENDITION_NORMAL )
+    screen_box . start_prompt ( )
+
+    RETURN
+
+ENDROUTINE { authorised_commit }
+
+{*****************************************************************************}
+
+ROUTINE set_tables
+
+{
+*
+* define table name from which data is committed
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE loop
+
+    loop = 0
+    REPEAT
+        loop = loop + 1
+    UNTIL source_sets[loop,1] = source
+
+    job_table    = source_table[loop,1]
+    sample_table = source_table[loop,2]
+    test_table   = source_table[loop,3]
+    result_table = source_table[loop,4]
+
+ENDROUTINE { set_tables }
+
+{*****************************************************************************}
+
+ROUTINE find_table_sets
+
+{
+*
+* retreive the named of the tablesets
+* Parameters:  None
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE table_count,table,child,parent,current_table_set,lp
+    DECLARE type
+
+    source_sets[1,1] = "ACTIVE"
+    source_sets[1,2] = "ACTIVE"
+    source_table[1,1] = "JOB_HEADER"
+    source_table[1,2] = "SAMPLE"
+    source_table[1,3] = "TEST"
+    source_table[1,4] = "RESULT"
+
+    type = FALSE
+
+    table_count = 1
+    table = table_name(table_count)
+    WHILE table <> ERROR DO
+        GET_TABLE_DETAILS 'table',
+                          "PARENT",
+                           parent
+        IF blank(parent) THEN
+            GET_TABLE_DETAILS 'table',
+                              "CHILD",
+                               child
+            WHILE NOT blank(child) DO
+                GET_TABLE_DETAILS 'child',
+                                  "TABLESET",
+                                  current_table_set
+                IF NOT valid_table_set(type, current_table_set) THEN
+                    table_set_count = table_set_count + 1
+                    dest_sets[table_set_count,1] = current_table_set
+                    dest_sets[table_set_count,2] = current_table_set
+                    source_sets[table_set_count+1,1] = current_table_set
+                    source_sets[table_set_count+1,2] = current_table_set
+                    IF table = "JOB_HEADER" THEN
+                        source_table[table_set_count+1,1] = child
+                    ELSEIF table = "SAMPLE" THEN
+                        source_table[table_set_count+1,2] = child
+                    ELSEIF table = "TEST" THEN
+                        source_table[table_set_count+1,3] = child
+                    ELSEIF table = "RESULT" THEN
+                        source_table[table_set_count+1,4] = child
+                    ENDIF
+                ELSE
+                    lp = 1
+                    WHILE lp < table_set_count+1 DO
+                        lp = lp + 1
+                        IF current_table_set = source_sets[lp,1] THEN
+                            IF table = "JOB_HEADER" THEN
+                                source_table[lp,1] = child
+                            ELSEIF table = "SAMPLE" THEN
+                                source_table[lp,2] = child
+                            ELSEIF table = "TEST" THEN
+                                source_table[lp,3] = child
+                            ELSEIF table = "RESULT" THEN
+                                source_table[lp,4] = child
+                            ENDIF
+                        ENDIF
+                    ENDWHILE
+                ENDIF
+                GET_TABLE_DETAILS 'child',"CHILD",child
+            ENDWHILE
+        ENDIF
+        table_count = table_count + 1
+        table = table_name(table_count)
+    ENDWHILE
+
+ENDROUTINE { find_table_sets }
+
+{*****************************************************************************}
+
+ROUTINE valid_table_set(type, VALUE table_set)
+
+{
+*
+* Check the tableset name to assure that it exists
+* Parameters:  type - boolean
+*              table_set - table set name
+* Return Value: boolen - table set valid or invalid
+*
+******************************************************************************}
+
+    DECLARE valid,check_count, loop
+
+    IF type THEN
+        IF blank(table_set) THEN
+            valid = TRUE
+        ELSE
+            valid = FALSE
+            check_count = 1
+            WHILE (check_count <= table_set_count+1) AND NOT valid DO
+                valid = STRIP(table_set) = STRIP(source_sets[check_count,1])
+                check_count = check_count + 1
+            ENDWHILE
+        ENDIF
+    ELSE
+        IF blank(table_set) THEN
+            valid = TRUE
+        ELSE
+            valid = FALSE
+            loop = 0
+            REPEAT
+                loop = loop + 1
+                check_count = loop
+            UNTIL source_sets[loop,1] = source
+            WHILE (check_count <= table_set_count) AND NOT valid DO
+                valid = STRIP(table_set) = STRIP(dest_sets[check_count,1])
+                check_count = check_count + 1
+            ENDWHILE
+        ENDIF
+    ENDIF
+
+    RETURN(valid)
+
+ENDROUTINE { valid_table_set }
+
+{*****************************************************************************}
+
+ROUTINE consign_job (job_id, source, destination)
+
+{
+*
+* consign job
+* Parameters:  job_id - job to be committed
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE sample_id, sample_count, loop, samp_id, status
+
+    ARRAY sample_id
+
+    sample_count = 0
+
+    samp_id = SELECT 'sample_table' . id_numeric
+             WHERE job_name = job_id
+
+    WHILE samp_id <> EMPTY DO
+        sample_count = sample_count + 1
+        sample_id [ sample_count ] = samp_id
+        NEXT 'sample_table'
+        samp_id = SELECT 'sample_table' . id_numeric
+    ENDWHILE
+
+    IF sample_count > 0 THEN
+        sample_bar . row = 4
+        sample_bar . header = "Consigning Samples"
+        sample_bar . start_value = 0
+        sample_bar . end_value = sample_count
+        sample_bar . start_install ()
+        loop = 0
+        WHILE loop < sample_count DO
+            loop = loop + 1
+            consign_sample (sample_id[loop], source, destination)
+            sample_bar . increase_one ()
+        ENDWHILE
+        sample_bar . end_install ()
+    ENDIF
+
+    job_id = SELECT 'sample_table' . job_name
+             FOR UPDATE
+             WHERE job_name = job_id
+
+    IF job_id <> EMPTY THEN
+        START WRITE TRANSACTION "commit job"
+ 
+        CONSIGN 'job_table' TO destination, status
+ 
+        IF ( status = EMPTY )
+            COMMIT
+        ELSE
+            flash_message ( status, TRUE)
+            ROLLBACK
+        ENDIF
+    ENDIF
+
+ENDROUTINE { consign_job }
+
+{*****************************************************************************}
+
+ROUTINE consign_sample (sample_id, source, destination)
+
+{
+*
+* consign sample
+* Parameters:  sample_id - sample to consign
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE test_id, test_count, test_num, loop, status
+
+    ARRAY test_id
+
+    test_count = 0
+
+    test_num = SELECT 'test_table' . test_number
+               WHERE sample = sample_id
+
+    WHILE test_num <> EMPTY DO
+        test_count = test_count + 1
+        test_id [ test_count ] = test_num
+        NEXT 'test_table'
+        test_num = SELECT 'test_table' . test_number
+    ENDWHILE
+
+    IF test_count > 0 THEN
+        test_bar . row = 11
+        test_bar . header = "Consigning Tests"
+        test_bar . start_value = 0
+        test_bar . end_value = test_count
+        test_bar . start_install ()
+        loop = 0
+        WHILE loop < test_count DO
+            loop = loop + 1
+            consign_test (test_id[loop], source, destination)
+            test_bar . increase_one ()
+        ENDWHILE
+        test_bar . end_install ()
+    ENDIF
+
+    sample_id = SELECT 'sample_table' . id_numeric
+             FOR UPDATE
+             WHERE id_numeric = sample_id
+
+    IF sample_id <> EMPTY THEN
+        START WRITE TRANSACTION "commit sample"
+ 
+        CONSIGN 'sample_table' TO destination, status
+ 
+        IF ( status = EMPTY )
+            COMMIT
+        ELSE
+            flash_message ( status, TRUE)
+            ROLLBACK
+        ENDIF
+    ENDIF
+
+ENDROUTINE { consign_sample }
+
+{*****************************************************************************}
+
+ROUTINE consign_date ( VALUE req_status,
+                              last_date,
+                                 source,
+                           destination )
+
+{
+*
+* Consign by date
+* Parameters:  req_status - staus of record to commit
+*              last_date - last date for record to commit
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE sample_id
+
+    IF ( last_date = INTERVAL ( "0 00:00:00.00" ) ) THEN
+        sample_id = SELECT 'sample_table' . id_numeric
+                 FOR UPDATE
+                 WHERE status = req_status
+    ELSE
+        sample_id = SELECT 'sample_table' . id_numeric
+                 FOR UPDATE
+                 WHERE ( login_date <= last_date  )
+                   AND ( status = req_status )
+    ENDIF
+
+    WHILE sample_id <> EMPTY DO
+        consign_sample (sample_id, source, destination)
+        NEXT 'sample_table'
+        sample_id = SELECT 'sample_table' . id_numeric
+    ENDWHILE
+
+ENDROUTINE { consign_date }
+
+{*****************************************************************************}
+
+ROUTINE consign_job_auth ( VALUE req_status,
+                                     source,
+                               destination )
+
+{
+*
+* consigne authorized job
+* Parameters:  req_status - staus of record to commit
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE job_id, sample_id
+
+    job_id = SELECT 'job_table' . job_name
+             FOR UPDATE
+             WHERE status = req_status
+ 
+    WHILE job_id <> EMPTY DO
+        sample_id = SELECT 'sample_table' . id_numeric
+                 FOR UPDATE
+                 WHERE job_name = job_id
+
+        WHILE sample_id <> EMPTY DO
+            consign_sample (sample_id, source, destination)
+            NEXT 'sample_table'
+            sample_id = SELECT 'sample_table' . id_numeric
+        ENDWHILE
+        NEXT 'job_table'
+        job_id = SELECT 'job_table' . job_name
+    ENDWHILE
+
+ENDROUTINE { consign_job_auth }
+
+{*****************************************************************************}
+
+ROUTINE consign_test (test_num, source, destination)
+
+{
+*
+* < Description >
+* Parameters:  test_num - test number to be committed
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE result_id, result_count, result_num, loop, status
+
+    ARRAY result_id
+
+    result_count = 0
+
+    result_num = SELECT 'result_table' . test_number
+               WHERE test_number = test_num
+
+    WHILE result_num <> EMPTY DO
+        result_count = result_count + 1
+        result_id [ result_count, 1 ] = result_num
+        result_id [ result_count, 2 ] = SELECT 'result_table' . name
+        NEXT 'result_table'
+        result_num = SELECT 'result_table' . test_number
+    ENDWHILE
+
+    IF result_count > 0 THEN
+        result_bar . row = 19
+        result_bar . header = "Consigning Results"
+        result_bar . start_value = 0
+        result_bar . end_value = result_count
+        result_bar . start_install ()
+        loop = 0
+        WHILE loop < result_count DO
+            loop = loop + 1
+            consign_result (result_id[loop,1], result_id[loop,2],
+                            source, destination)
+            result_bar . increase_one ()
+        ENDWHILE
+        result_bar . end_install ()
+    ENDIF
+
+    test_num = SELECT 'test_table' . test_number
+             FOR UPDATE
+             WHERE test_number = test_num
+
+    IF test_num <> EMPTY THEN
+        START WRITE TRANSACTION "commit sample"
+ 
+        CONSIGN 'test_table' TO destination, status
+ 
+        IF ( status = EMPTY )
+            COMMIT
+        ELSE
+            flash_message ( status, TRUE)
+            ROLLBACK
+        ENDIF
+    ENDIF
+
+ENDROUTINE { consign_test }
+
+{*****************************************************************************}
+
+ROUTINE consign_result (result_num, result_name, source, destination)
+
+{
+*
+* consign result
+* Parameters:  result_num - test number on result
+*              result_name - component name
+*              source - source table set
+*              destination - destination table set
+* Return Value: None
+*
+******************************************************************************}
+    DECLARE res_id, status
+
+    res_id = SELECT 'result_table' . test_number
+             FOR UPDATE
+             WHERE (test_number = result_num)
+               AND (name = result_name)
+
+    IF res_id <> EMPTY THEN
+        START WRITE TRANSACTION "commit sample"
+ 
+        CONSIGN 'result_table' TO destination, status
+ 
+        IF ( status = EMPTY )
+            COMMIT
+        ELSE
+            flash_message ( status, TRUE)
+            ROLLBACK
+        ENDIF
+    ENDIF
+
+ENDROUTINE { consign_result }
+
+{*****************************************************************************}
+{*****************************************************************************}
+{*****************************************************************************}
+

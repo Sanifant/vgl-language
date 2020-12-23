@@ -3,4 +3,4 @@
 export CODE_TESTS_PATH="$(pwd)/out/test"
 export CODE_TESTS_WORKSPACE="$(pwd)testData"
 
-node "$(pwd)/client/out/test/runTest"
+node "$(pwd)/out/test/runTest"

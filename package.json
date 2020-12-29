@@ -16,55 +16,48 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"languages": [
-			{
-				"id": "vgl-structure",
-				"aliases": [
-					"Structure.txt"
-				],
-				"filenamePatterns": [
-					"structure.txt",
-					"structure.*.txt",
-					"*.structure.txt",
-					"structure.txt.*"
-				]
-			},
-			{
-				"id": "vgl-report",
-				"aliases": [
-					"VGL Report"
-				],
-				"filenamePatterns": [
-					"*.rpf",
-					"*.sxf",
-					"*.caf"
-				]
-			}
-		],
+        "languages": [
+            {
+                "id": "vgl-structure",
+                "aliases": [
+                    "Structure.txt"
+                ],
+                "filenamePatterns": [
+                    "structure.txt",
+                    "structure.*.txt",
+                    "*.structure.txt",
+                    "structure.txt.*"
+                ]
+            },
+            {
+                "id": "vgl-report",
+                "aliases": [
+                    "VGL Report"
+                ],
+                "filenamePatterns": [
+                    "*.rpf",
+                    "*.sxf",
+                    "*.caf"
+                ]
+            }
+        ],
+		"viewsContainers": {
+			"activitybar": [
+				{
+				"id": "sampleManager",
+				"title": "SampleManager Toolbox",
+				"icon": "media/sm.svg"
+				}
+			]
+		},
 		"views": {
-			"explorer": [
+			"sampleManager": [
 				{
 					"id": "reportOutline",
 					"name": "Report Outline",
 					"when": "reportOutlineEnabled"
 				}
 			]
-		},
-		"configuration":{
-			"title": "vgl language",
-			"properties": {
-				"vgl.Instance.Name": {
-					"type": "string",
-					"scope":"window",
-					"default": "VGSM",
-					"description": "Name of the SampleManager Instance"
-				},
-				"vgl.Instance.Folder": {
-					"type": "string",
-					"scope":"window",
-					"description": "Folder of the SampleManager Instance"
-				}
-			}
 		}
 	},
 	"scripts": {

@@ -13,8 +13,8 @@ export class ReportOutlineProvider implements vscode.TreeDataProvider<Routine> {
     constructor(private context: vscode.ExtensionContext) {
         vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
         console.time("executionTime"); 
-        this.nodes = new Array();
-        this.routinePattern = /(?<!END)(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
+        this.nodes = new Array(); 
+        this.routinePattern = /(?<!END)((?<global>global|GLOBAL)\s+)?(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
         //this.parseDocument();
         this.onActiveEditorChanged();
 	}
@@ -36,10 +36,13 @@ export class ReportOutlineProvider implements vscode.TreeDataProvider<Routine> {
 
 	private onActiveEditorChanged(): void {
 		if (vscode.window.activeTextEditor) {
+            console.timeLog("executionTime", "Document changed in editor");
 			if (vscode.window.activeTextEditor.document.uri.scheme === 'file') {
 				const enabled = vscode.window.activeTextEditor.document.languageId === 'vgl-report';
 				vscode.commands.executeCommand('setContext', 'reportOutlineEnabled', enabled);
-				if (enabled) {
+				if (enabled) {   
+                    console.timeLog("executionTime", "document is a VGL document");                 
+                    this.nodes = new Array();
 					this.parseDocument();
 				}
 			}
@@ -59,10 +62,12 @@ export class ReportOutlineProvider implements vscode.TreeDataProvider<Routine> {
             let matches;
             while ((matches = regex.exec(text)) !== null) {
                 let selectionStart = matches.index;
-                let selectionEnd = matches.index + matches[0].length;
+                let global = matches.groups.global;
+                let selectionEnd = regex.lastIndex;
                 var treeNode = new Routine(
                     matches.groups.routineName,
                     vscode.TreeItemCollapsibleState.None,
+                    global === undefined,
                     {
                         command: 'extension.openReportSelection',
                         title: '',
@@ -71,7 +76,6 @@ export class ReportOutlineProvider implements vscode.TreeDataProvider<Routine> {
                 );
                 
                 let arraySize = this.nodes.push(treeNode);
-                console.timeLog("executionTime", "Array of Routines: " + arraySize) ;
             }
 		}
 
@@ -82,6 +86,7 @@ export class Routine extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        public readonly isPrivate: boolean,
 		public readonly command?: vscode.Command
 	) {
 		super(label, collapsibleState);
@@ -89,6 +94,12 @@ export class Routine extends vscode.TreeItem {
 		this.tooltip = `Routine declaration for ${this.label}`;
 		this.description = `Routine declaration for ${this.label}`;
 
-        console.timeLog("executionTime", `Created new Routinedefinition for ${this.label}`) ;
+        if(isPrivate)
+        {
+            this.iconPath = new vscode.ThemeIcon("mirror-private");
+        }
+        else{
+            this.iconPath = new vscode.ThemeIcon("octoface");
+        }
 	}
 }

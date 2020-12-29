@@ -9,9 +9,11 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	console.log('Congratulations, your extension "vgl-language" is now active!');
 
-	const reportOutlineProvider = new ReportOutlineProvider(context);
-	vscode.window.registerTreeDataProvider('reportOutline', reportOutlineProvider);
-	vscode.commands.registerCommand('extension.openReportSelection', range => reportOutlineProvider.select(range));
+	context.subscriptions.push(
+        vscode.languages.registerDocumentSymbolProvider(
+            {scheme: "file", language: "vgl-report"}, 
+            new ReportOutlineProvider())
+    );
 }
 
 // this method is called when your extension is deactivated

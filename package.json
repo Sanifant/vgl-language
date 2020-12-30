@@ -2,13 +2,13 @@
 	"name": "vgl-language",
 	"displayName": "VGL Language",
 	"description": "SampleManager support extension",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Sanifant/vgl-language"
-	  },
+	},
 	"engines": {
 		"vscode": "^1.52.0"
 	},
@@ -21,37 +21,37 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-        "languages": [
-            {
-                "id": "vgl-structure",
-                "aliases": [
-                    "Structure.txt"
-                ],
-                "filenamePatterns": [
-                    "structure.txt",
-                    "structure.*.txt",
-                    "*.structure.txt",
-                    "structure.txt.*"
-                ]
-            },
-            {
-                "id": "vgl-report",
-                "aliases": [
-                    "VGL Report"
-                ],
-                "filenamePatterns": [
-                    "*.rpf",
-                    "*.sxf",
-                    "*.caf"
-                ]
-            }
-        ],
+		"languages": [
+			{
+				"id": "vgl-structure",
+				"aliases": [
+					"Structure.txt"
+				],
+				"filenamePatterns": [
+					"structure.txt",
+					"structure.*.txt",
+					"*.structure.txt",
+					"structure.txt.*"
+				]
+			},
+			{
+				"id": "vgl-report",
+				"aliases": [
+					"VGL Report"
+				],
+				"filenamePatterns": [
+					"*.rpf",
+					"*.sxf",
+					"*.caf"
+				]
+			}
+		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-				"id": "sampleManager",
-				"title": "SampleManager Toolbox",
-				"icon": "media/sm.svg"
+					"id": "sampleManager",
+					"title": "SampleManager Toolbox",
+					"icon": "media/sm.svg"
 				}
 			]
 		},

@@ -1,0 +1,2292 @@
+{******************************************************************************
+*
+* Module Name   : $LIB_LIMIT.RPF
+*
+* Purpose       : General Limit Comparison library. Defines classes for
+*		  checking limits.
+*
+* Document Ref. :
+*
+* Specification :
+*
+* Portability   : Not Checked
+*
+* Re-entrant    : Yes
+*
+*******************************************************************************}
+
+JOIN STANDARD_LIBRARY STD_UTILS
+JOIN STANDARD_LIBRARY STD_CLASS
+JOIN STANDARD_LIBRARY STD_MESSAGE
+
+JOIN LIBRARY $LIB_UTILS
+JOIN LIBRARY $MLPS_CONST
+JOIN LIBRARY $LIB_UNIT
+
+ENABLE WINDOWS
+SET NOTPROTECTED
+SET NAME "DEFER/"
+SET COMPILE_OPTION DECLARE
+
+{* GLOBAL CONSTANTS ***********************************************************}
+
+
+{* LOCAL CONSTANTS ************************************************************}
+
+CONSTANT LIMIT_COMPARE_BASE_CLASS     = "STD_LIMIT_BASE_COMPARE"
+CONSTANT LIMIT_COMPARE_NUMERIC_CLASS  = "STD_LIMIT_NUMERIC_COMPARE"
+CONSTANT LIMIT_COMPARE_TEXT_CLASS     = "STD_LIMIT_TEXT_COMPARE"
+CONSTANT LIMIT_COMPARE_BOOLEAN_CLASS  = "STD_LIMIT_BOOLEAN_COMPARE"
+CONSTANT LIMIT_COMPARE_INTERVAL_CLASS = "STD_LIMIT_INTERVAL_COMPARE"
+
+
+{ Comparison array constants }
+
+CONSTANT LIMIT_RESULT_CHEVRON_POS = 1
+CONSTANT LIMIT_LIMIT_CHEVRON_POS  = 2
+CONSTANT LIMIT_RESULT_LIMIT_POS   = 3
+
+CONSTANT LIMIT_RESULT_CHEVRON_LT    = 1
+CONSTANT LIMIT_RESULT_CHEVRON_GT    = 2
+CONSTANT LIMIT_RESULT_CHEVRON_NONE  = 3
+CONSTANT LIMIT_RESULT_CHEVRON_GE    = 4
+CONSTANT LIMIT_RESULT_CHEVRON_LE    = 5
+
+CONSTANT LIMIT_LIMIT_CHEVRON_LT  = 1
+CONSTANT LIMIT_LIMIT_CHEVRON_LE  = 2
+CONSTANT LIMIT_LIMIT_CHEVRON_GT  = 3
+CONSTANT LIMIT_LIMIT_CHEVRON_GE  = 4
+
+CONSTANT LIMIT_RESULT_LIMIT_LT  = 1
+CONSTANT LIMIT_RESULT_LIMIT_EQ  = 2
+CONSTANT LIMIT_RESULT_LIMIT_GT  = 3
+
+
+CONSTANT LIMIT_RESULT_LT_MIN    = 1
+CONSTANT LIMIT_RESULT_IN_RANGE  = 2
+CONSTANT LIMIT_RESULT_GT_MAX    = 3
+
+{* VARIABLES ******************************************************************}
+
+{ Array to hold the results of an open ended comparison }
+DECLARE lib_limit_open_ended_comparison
+
+{ Array to hold the results of a normal comparison }
+DECLARE lib_limit_normal_comparison
+
+DECLARE LIMIT_COMPARE_DATABASE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_initialise
+
+{
+*	Initialise the limit library.
+*
+*******************************************************************************}
+
+	DECLARE open_limit_pass          ,
+		open_limit_fail          ,
+		open_limit_indeterminate
+
+	IF NOT ( GLOBAL ( "LIBRARY_INITIALISED" )) THEN
+
+		lib_limit_class_define ()
+
+		CREATE OBJECT "STD_COLLECTION", LIMIT_COMPARE_DATABASE
+                LIMIT_COMPARE_DATABASE . add_index ( "OBJECT_NAME" )
+
+                IF global ( "DEFINE_OPEN_ENDED" ) = "IN_SPEC" THEN
+
+			open_limit_pass          = MLP_CONST_FAIL
+			open_limit_fail          = MLP_CONST_PASS
+			open_limit_indeterminate = MLP_CONST_INDETERMINATE
+
+		ELSE
+
+			open_limit_pass          = MLP_CONST_PASS
+			open_limit_fail          = MLP_CONST_FAIL
+			open_limit_indeterminate = MLP_CONST_INDETERMINATE
+
+		ENDIF
+
+		{ Define the comparison arrays }
+
+		ARRAY lib_limit_open_ended_comparison ARRAY_SIZE ( 5,4,3 )
+
+
+		{ Comparisons for results prefixed with < }
+		{ Examples for case where limit <4 means all results <4 fail }
+
+		{ Result <=2  Limit <2 Indeterminate }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_indeterminate
+
+		{ Result <=3  Limit <2 Indeterminate }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_indeterminate
+
+		{ Result <=1  Limit <2 Fail }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_fail
+
+		{ Result >=2  Limit <2 Pass }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_pass
+
+		{ Result >=3  Limit <2 Pass }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_pass
+
+		{ Result >=1  Limit <2 Pass }
+		lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LT  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_indeterminate
+
+                { Result <=2  Limit >2 Pass}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_pass
+
+                { Result <=3  Limit >2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_indeterminate
+
+                { Result <=1  Limit >2 Pass}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_pass
+
+                { Result >=2  Limit >2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_indeterminate
+
+                { Result >=3  Limit >2 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_fail
+
+                { Result >=1  Limit >2 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GT  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_indeterminate
+
+                { Result <=2 Limit >=2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_indeterminate
+
+                { Result <=3 Limit >=2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_indeterminate
+
+                { Result <=1 Limit >=2 Pass}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_pass
+
+                { Result >=2 Limit >=2 Fail}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_fail
+
+                { Result >=3 Limit >=2 Fail}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_fail
+
+                { Result >=1 Limit >=2 Interterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_GE  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_indeterminate
+
+
+                { Result <=2 Limit <=2 Fail}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_fail
+
+                { Result <=3 Limit <=2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_indeterminate
+
+                { Result <=1 Limit <=2 Fail}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_fail
+
+                { Result >=2 Limit <=2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_EQ    ] =
+                        open_limit_indeterminate
+
+                { Result >=3 Limit <=2 Pass}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_GT    ] =
+                        open_limit_pass
+
+                { Result >=1 Limit <=2 Indeterminate}
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+                          LIMIT_LIMIT_CHEVRON_LE  ,
+                          LIMIT_RESULT_LIMIT_LT    ] =
+                        open_limit_indeterminate
+
+		{ Result <4  Limit <5 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_fail
+
+		{ Result <4  Limit <=5 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_fail
+
+		{ Result <4  Limit >5 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_pass
+
+		{ Result <4  Limit >=5 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_pass
+
+		{ Result <4  Limit <4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result <4  Limit <=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result <4  Limit >4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result <4  Limit >=4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result <5  Limit <4 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_indeterminate
+
+
+		{ Result <5  Limit <=4 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_indeterminate
+
+
+		{ Result <5  Limit >4 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_indeterminate
+
+
+		{ Result <5  Limit >=4 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_indeterminate
+
+
+		{ Comparisons for results prefixed with > }
+
+
+		{ Result >4  Limit <5 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_indeterminate
+
+
+		{ Result >4  Limit <=5 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_indeterminate
+
+
+		{ Result >4  Limit >5 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_indeterminate
+
+
+		{ Result >4  Limit >=5 Indeterminate }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_indeterminate
+
+
+		{ Result >4  Limit <4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result >4  Limit <=4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result >4  Limit >4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result >4  Limit >=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result >5  Limit <4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_pass
+
+
+		{ Result >5  Limit <=4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_pass
+
+
+		{ Result >5  Limit >4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_fail
+
+
+		{ Result >5  Limit >=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_fail
+
+
+		{ Comparisons for results with no prefix }
+
+
+		{ Result 4  Limit <5 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_fail
+
+
+		{ Result 4  Limit <=5 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_fail
+
+
+		{ Result 4  Limit >5 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_pass
+
+
+		{ Result 4  Limit >=5 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_LT    ] =
+						open_limit_pass
+
+
+		{ Result 4  Limit <4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result 4  Limit <=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result 4  Limit >4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_pass
+
+
+		{ Result 4  Limit >=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_EQ    ] =
+						open_limit_fail
+
+
+		{ Result 5  Limit <4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_pass
+
+
+		{ Result 5  Limit <4 Pass }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_LE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_pass
+
+
+		{ Result 5  Limit >4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GT  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_fail
+
+
+		{ Result 5  Limit >=4 Fail }
+                lib_limit_open_ended_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+						  LIMIT_LIMIT_CHEVRON_GE  ,
+						  LIMIT_RESULT_LIMIT_GT    ] =
+						open_limit_fail
+
+		ARRAY lib_limit_normal_comparison ARRAY_SIZE ( 5 , 3 )
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+					      LIMIT_RESULT_LT_MIN     ] =
+							MLP_CONST_FAIL
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+					      LIMIT_RESULT_LT_MIN     ] =
+							MLP_CONST_FAIL
+
+		IF GLOBAL ( "MLP_INDETERMINATE_INSPEC" ) THEN
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_PASS
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_PASS
+		ELSE
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_INDETERMINATE
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_INDETERMINATE
+		ENDIF
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LT ,
+					      LIMIT_RESULT_GT_MAX     ] =
+							MLP_CONST_INDETERMINATE
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_LE ,
+					      LIMIT_RESULT_GT_MAX     ] =
+							MLP_CONST_INDETERMINATE
+
+
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+					      LIMIT_RESULT_LT_MIN     ] =
+							MLP_CONST_INDETERMINATE
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+					      LIMIT_RESULT_LT_MIN     ] =
+							MLP_CONST_INDETERMINATE
+
+		IF GLOBAL ( "MLP_INDETERMINATE_INSPEC" ) THEN
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_PASS
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_PASS
+		ELSE
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_INDETERMINATE
+			lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+						      LIMIT_RESULT_IN_RANGE   ] =
+								MLP_CONST_INDETERMINATE
+		ENDIF
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GT ,
+					      LIMIT_RESULT_GT_MAX     ] =
+							MLP_CONST_FAIL
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_GE ,
+					      LIMIT_RESULT_GT_MAX     ] =
+							MLP_CONST_FAIL
+
+
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+					      LIMIT_RESULT_LT_MIN       ] =
+							MLP_CONST_FAIL
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+					      LIMIT_RESULT_IN_RANGE     ] =
+							MLP_CONST_PASS
+
+		lib_limit_normal_comparison [ LIMIT_RESULT_CHEVRON_NONE ,
+					      LIMIT_RESULT_GT_MAX       ] =
+							MLP_CONST_FAIL
+
+
+		SET GLOBAL "LIBRARY_INITIALISED" TO TRUE
+
+	ENDIF
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE lib_limit_class_define
+
+{
+*	Define the classed used by the limit package.
+*
+*******************************************************************************}
+
+
+	DEFINE CLASS LIMIT_COMPARE_BASE_CLASS
+
+		INHERIT  "STD_COLLECTED"
+
+		TABLES   LIMIT_VIEW
+
+		PROPERTIES "MIN_LIMIT"     ,
+			   "MAX_LIMIT"     ,
+			   "PLACES"        ,
+			   "TEXT_SPEC"     ,
+			   "TEXT_PHRASE"   ,
+			   "BOOLEAN_PASS"  ,
+			   "OBJECT_NAME"   ,
+			   "STATUS"        ,
+			   "USER_INFO"
+
+		ACTIONS "SETUP"   ,
+			"COMPARE" ,
+			"DEFINED" ,
+			"FORMAT"  ,
+			"MESSAGE" ,
+			"DEBUG"
+
+	END CLASS
+
+	DEFINE CLASS LIMIT_COMPARE_NUMERIC_CLASS
+
+		INHERIT LIMIT_COMPARE_BASE_CLASS
+
+		ACTIONS "SETUP"         ,
+			"COMPARE"       ,
+			"DEFINED"       ,
+			"FORMAT"        ,
+			"MESSAGE"       ,
+			"DEBUG"         ,
+			"FORMAT_RESULT"
+
+	END CLASS
+
+	DEFINE CLASS LIMIT_COMPARE_TEXT_CLASS
+
+		INHERIT LIMIT_COMPARE_BASE_CLASS
+
+		ACTIONS "SETUP"   ,
+			"COMPARE" ,
+			"DEFINED" ,
+			"FORMAT"  ,
+			"MESSAGE" ,
+			"DEBUG"
+
+	END CLASS
+
+	DEFINE CLASS LIMIT_COMPARE_BOOLEAN_CLASS
+
+		INHERIT LIMIT_COMPARE_BASE_CLASS
+
+		ACTIONS "SETUP"   ,
+			"COMPARE" ,
+			"DEFINED" ,
+			"FORMAT"  ,
+			"MESSAGE" ,
+			"DEBUG"
+
+	END CLASS
+
+	DEFINE CLASS LIMIT_COMPARE_INTERVAL_CLASS
+
+		INHERIT LIMIT_COMPARE_BASE_CLASS
+
+		ACTIONS "SETUP"   ,
+			"COMPARE" ,
+			"DEFINED" ,
+			"FORMAT"  ,
+			"MESSAGE" ,
+			"DEBUG"
+
+	END CLASS
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_setup ( self )
+
+{
+*	Set up a base comparison
+*
+*******************************************************************************}
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_defined ( self )
+
+{
+*	Is the limit row valid for a base comparsion.
+*
+*******************************************************************************}
+
+	RETURN ( FALSE )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_compare ( self          ,
+					        mlp_component ,
+					        mlp_operation )
+
+{
+*	Compare a base limit.
+*
+*******************************************************************************}
+
+
+	RETURN ( MLP_CONST_PASS )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_format (  self          ,
+					        mlp_component ,
+						mlp_operation )
+
+{
+*	Format a base limit.
+*
+*******************************************************************************}
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_message ( self          ,
+						mlp_operation )
+
+{
+*	Error message for a base limit.
+*
+*******************************************************************************}
+
+	RETURN ( " " )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_base_compare_action_debug (  self          ,
+					       mlp_component ,
+					       mlp_operation )
+
+{
+*	Debug a base limit.
+*
+*******************************************************************************}
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_setup ( self )
+
+{
+*	Set up a numeric comparison
+*
+*******************************************************************************}
+
+	self . min_limit = SELECT limit_view . min_limit IN OBJECT self
+	self . max_limit = SELECT limit_view . max_limit IN OBJECT self
+	self . places    = SELECT limit_view . places    IN OBJECT self
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_defined ( self )
+
+{
+*	Is the limit row valid for a numeric comparsion.
+*
+*******************************************************************************}
+
+	DECLARE min_limit ,
+		max_limit ,
+		defined
+
+	min_limit = self . min_limit
+	max_limit = self . max_limit
+
+	min_limit = strip ( min_limit )
+	max_limit = strip ( max_limit )
+
+	IF ( INDEX ( min_limit , ">" ) > 0 ) OR
+	   ( INDEX ( min_limit , "<" ) > 0 ) THEN
+
+		defined = TRUE
+
+	ELSEIF NOT blank( min_limit ) AND NOT blank( max_limit ) THEN
+
+		min_limit = numeric ( min_limit )
+		max_limit = numeric ( max_limit )
+
+		defined = (( min_limit <> ERROR ) AND ( max_limit <> ERROR ))
+
+	ELSE
+
+		defined = FALSE
+
+	ENDIF
+
+	RETURN ( defined )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_compare (       self          ,
+							 mlp_component ,
+							 mlp_operation )
+
+{
+*	Compare a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE res_value       ,
+		status          ,
+		result_unit     ,
+		limit_unit      ,
+		error_status    ,
+		res_text        ,
+		result_places   ,
+		limit_places,
+		result_status
+
+	res_text = mlp_operation . result_value
+
+	mlp_operation . compared_result_value = res_text
+
+	IF num_text ( res_text ) THEN
+
+		result_unit = SELECT result . units
+				IN OBJECT mlp_operation . result_row
+
+		result_places  = SELECT result . places
+		                   IN OBJECT mlp_operation . result_row
+
+		limit_unit  = SELECT mlp_components . units
+				IN OBJECT mlp_component
+				
+		result_status =  SELECT result . status
+		                   IN OBJECT mlp_operation . result_row
+
+		res_value = numeric ( res_text )
+
+		IF ( NOT blank ( limit_unit )                   ) AND
+		   ( ( global ( "UNIT_CONVERSION" ) = "CONVERT" ) OR
+		     ( global ( "UNIT_CONVERSION" ) = "CHECK"   )    ) THEN
+
+			res_value = unit_convert ( res_value    ,
+						   result_unit  ,
+						   limit_unit   ,
+						   error_status )
+
+			IF error_status <> EMPTY THEN
+
+				flash_message ( message_get_text ( error_status , 1 ) ,
+				                TRUE                                  )
+
+			ENDIF
+
+			mlp_operation . compared_result_value =
+			                       self . format_result ( res_text      ,
+			                                              res_value     ,
+			                                              result_places )
+
+		ENDIF
+
+		IF GLOBAL ( "MLP_ROUNDING" ) THEN
+
+			limit_places  = SELECT mlp_components . places
+			                  IN OBJECT mlp_component
+
+			IF result_places <> limit_places THEN
+
+				mlp_operation . compared_result_value =
+				                       self . format_result ( res_text     ,
+				                                              res_value    ,
+				                                              limit_places )
+
+				res_value = NUMERIC ( mlp_operation . compared_result_value )
+
+			ENDIF
+
+		ENDIF
+
+	ELSE
+
+		res_value = 0.0
+		mlp_operation . compared_result_value = "0.0"
+
+	ENDIF
+	
+	{ Start: Mol Bug - 1205 }
+	IF (result_status = " ") THEN   
+	
+		status = MLP_CONST_PASS
+	
+	ELSE
+
+		status = lib_limit_numeric_compare ( res_text         ,
+											res_value        ,
+											self . min_limit ,
+											self . max_limit )
+										 
+	ENDIF
+	
+	{ End: Mol Bug - 1205 }
+
+	RETURN ( status )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_format (  self          ,
+					           mlp_component ,
+						   mlp_operation )
+
+{
+*	Format a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE  format_details  ,
+		 count
+
+	format_details = mlp_operation . format_object
+   	format_details . header     = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_N" , 1 )
+   	format_details . titles [1] = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_N_GUI" , 1 )
+   	format_details . titles [2] = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_N_GUI" , 2 )
+   	format_details . titles [3] = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_N_GUI" , 3 )
+
+	count = format_details . next
+
+	format_details . units [ count ] = strip ( SELECT mlp_components . units
+						           IN OBJECT mlp_component             )
+
+	format_details . limits [ count , 1 ] = strip ( self . min_limit )
+
+	IF format_details . append_units THEN
+
+		format_details . limits [ count , 1 ] =
+			format_details . limits [ count , 1 ] : " " :
+			format_details . units [ count ]
+
+	ENDIF
+
+	IF ( INDEX ( self . min_limit , "<" ) > 0 ) THEN
+
+		format_details . limits [ count , 2 ] =
+		   format_details . limits [ count , 1 ]
+		format_details . limits [ count , 1 ] = ""
+
+	ELSEIF ( INDEX ( self . min_limit , ">" ) > 0 ) THEN
+
+		format_details . limits [ count , 2 ] = ""
+
+	ELSE
+
+		format_details . limits [ count , 2 ] = strip ( self . max_limit )
+
+		IF format_details . append_units THEN
+
+			format_details . limits [ count , 2 ] =
+				format_details . limits [ count , 2 ] : " " :
+				format_details . units [ count ]
+
+       		ENDIF
+
+	ENDIF
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_format_result (       self      ,
+                                                         VALUE res_text  ,
+                                                         VALUE res_value ,
+                                                         VALUE places    )
+
+{
+*	Format the value using the passed number of places
+*
+*******************************************************************************}
+
+	DECLARE result_chevron  ,
+	        limit_format    ,
+	        formatted_value
+
+	IF ( INDEX ( res_text, ">=" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_GE
+
+	ELSEIF ( INDEX ( res_text, "<=" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_LE
+
+	ELSEIF ( INDEX ( res_text, "<" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_LT
+
+	ELSEIF ( INDEX ( res_text, ">" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_GT
+
+	ELSE
+
+		result_chevron = LIMIT_RESULT_CHEVRON_NONE
+
+	ENDIF
+
+	IF places > 0 THEN
+
+		limit_format = "9999999999." :
+		               PAD ( "9", "9", places )
+
+	ELSEIF places = 0 THEN
+
+		limit_format = "9999999999"
+
+	ELSE
+
+		limit_format = "9999999999.999"
+
+	ENDIF
+
+	formatted_value = STRIP ( NUMBER_TO_TEXT ( res_value, limit_format ))
+
+	IF ( result_chevron = LIMIT_RESULT_CHEVRON_GE ) THEN
+
+		formatted_value = ">=" : formatted_value
+
+	ELSEIF ( result_chevron = LIMIT_RESULT_CHEVRON_LE ) THEN
+
+		formatted_value = "<=" : formatted_value
+
+	ELSEIF ( result_chevron = LIMIT_RESULT_CHEVRON_LT ) THEN
+
+		formatted_value = "<" : formatted_value
+
+	ELSEIF ( result_chevron = LIMIT_RESULT_CHEVRON_GT ) THEN
+
+		formatted_value = ">" : formatted_value
+
+	ENDIF
+
+	RETURN ( formatted_value )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_message ( self          ,
+						   mlp_operation )
+
+{
+*	Error message for a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE message_ptr
+
+         message_fetch ( "RESULT_ENTRY_MLP_NUMERIC_LIMIT",
+                          message_ptr                    )
+
+         message_add_parameter ( message_ptr              ,
+                                 strip ( self . min_limit ))
+         message_add_parameter ( message_ptr              ,
+                                 strip ( self . max_limit ))
+
+	RETURN ( message_get_text ( message_ptr, 1  ))
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_numeric_compare_action_debug (  self          ,
+					          mlp_component ,
+					          mlp_operation )
+
+{
+*	Debug a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE min_limit ,
+		max_limit
+
+
+	min_limit = self . min_limit
+	max_limit = self . max_limit
+
+literal
+	Min Limit $min_limit___________  Max Limit $max_limit______________
+$endliteral
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_setup ( self )
+
+{
+*	Set up a textual comparison
+*
+*******************************************************************************}
+
+	self . text_spec   = SELECT limit_view . text_spec   IN OBJECT self
+	self . text_phrase = SELECT limit_view . text_phrase IN OBJECT self
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_defined ( self )
+
+{
+*	Is the limit row valid for a comparsion.
+*
+*******************************************************************************}
+
+	DECLARE text_spec   ,
+		text_phrase ,
+		defined
+
+	text_spec   = self . text_spec
+	text_phrase = self . text_phrase
+
+	defined = ( strip ( text_spec   ) <> " " ) OR
+	          ( strip ( text_phrase ) <> " " )
+
+
+	RETURN ( defined )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_compare (       self          ,
+					              mlp_component ,
+						      mlp_operation )
+
+{
+*	Compare a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE text_spec   ,
+		text_phrase ,
+		status      ,
+        	res_text    ,
+		message_ptr
+
+	res_text = mlp_operation . result_value
+
+	text_spec   = self . text_spec
+	text_phrase = self . text_phrase
+
+	IF strip ( text_spec ) <> " " THEN
+
+		{ Just a simple comparison with a text string }
+
+		IF text_spec = res_text THEN
+
+			status = MLP_CONST_PASS
+
+		ELSE
+
+			status = MLP_CONST_FAIL
+
+		ENDIF
+
+	ELSE
+
+		{ Need to validate against a phrase list -
+		  First check the limit_phrase_entry to see if its in the list.
+		  If its not there then check the header to find out what to
+		  do. }
+
+		status = select limit_phrase_entry . comparison
+			 WHERE ( limit_phrase = text_phrase ) AND
+			       ( result_value = res_text    )
+
+		IF status = EMPTY THEN
+
+			{ We didn't find it }
+			status = select limit_phrase_header . default_comparison
+				 WHERE  identity = text_phrase
+
+			IF status = EMPTY THEN
+
+				{ Something is wrong - phrase does not exist }
+
+				message_fetch ( "RESULT_ENTRY_PHRASE_MISSING",
+						message_ptr                  )
+
+				message_add_parameter ( message_ptr    ,
+							text_phrase    )
+
+				flash_message ( message_get_text ( message_ptr,
+								   1	     ),
+						TRUE                     )
+                                status = MLP_CONST_FAIL
+
+			ENDIF
+
+		ENDIF
+
+	ENDIF
+
+	RETURN ( status )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_format (  self          ,
+					        mlp_component ,
+					        mlp_operation )
+
+{
+*	Format a textual limit.
+*
+*******************************************************************************}
+
+	DECLARE  format_details  ,
+		 count
+
+	format_details = mlp_operation . format_object
+	format_details . header = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_T" , 1 )
+
+	count = format_details . next
+
+	format_details . titles [ 1 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_T_GUI",1)
+	format_details . titles [ 2 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_T_GUI",2)
+	format_details . titles [ 3 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_T_GUI",3)
+
+	format_details . limits [ count , 1 ] = self . text_spec
+	format_details . limits [ count , 2 ] = self . text_phrase
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_message ( self          ,
+						mlp_operation )
+
+{
+*	Error message for a textual limit.
+*
+*******************************************************************************}
+
+	DECLARE message_ptr
+
+         message_fetch ( "RESULT_ENTRY_MLP_TEXT_LIMIT",
+                          message_ptr                 )
+
+         message_add_parameter ( message_ptr               ,
+                                 strip ( self . text_spec ))
+	RETURN ( message_get_text ( message_ptr, 1  ))
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_text_compare_action_debug (  self          ,
+					       mlp_component ,
+					       mlp_operation )
+
+{
+*	Debug a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE text_phrase ,
+		text_spec
+
+
+	text_phrase = self . text_phrase
+	text_spec   = self . text_spec
+
+literal
+	Phrase $text_phrase___________  Spec $text_spec______________________
+$endliteral
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_boolean_compare_action_setup ( self )
+
+{
+*	Set up a boolean comparison
+*
+*******************************************************************************}
+
+	self . boolean_pass = SELECT limit_view . boolean_pass IN OBJECT self
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+ROUTINE std_limit_boolean_compare_action_defined ( self )
+
+{
+*	Is the limit row valid for a comparsion.
+*
+*******************************************************************************}
+
+	RETURN ( TRUE )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_boolean_compare_action_compare (       self          ,
+							 mlp_component ,
+							 mlp_operation )
+
+{
+*	Compare a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE status     ,
+        	res_text   ,
+		is_true
+
+	res_text = mlp_operation . result_value
+
+	is_true = ( strip ( res_text ) =
+		    strip ( SELECT result . true_word
+				IN OBJECT mlp_operation . result_row ))
+
+	IF self . boolean_pass = is_true THEN
+
+		status = MLP_CONST_PASS
+
+	ELSE
+
+		status = MLP_CONST_FAIL
+
+	ENDIF
+
+	RETURN ( status )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_boolean_compare_action_format (  self          ,
+						   mlp_component ,
+						   mlp_operation )
+
+{
+*	Format a boolean limit.
+*
+*******************************************************************************}
+
+	DECLARE  format_details  ,
+		 count
+
+
+	format_details = mlp_operation . format_object
+	format_details . header = get_user_message ( "RESULT_ENTRY_MLP_SCREEN_HEADER_B" , 1 )
+
+	count = format_details . next
+
+	format_details . titles [ 1 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_B_GUI",1)
+	format_details . titles [ 2 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_B_GUI",2)
+	format_details . titles [ 3 ] =
+		get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_B_GUI",3)
+
+	IF self . boolean_pass THEN
+
+		format_details . limits [ count , 1 ] =
+		   			 strip ( SELECT result . true_word
+						IN OBJECT mlp_operation . result_row )
+
+	ELSE
+
+		format_details . limits [ count , 1 ] =
+		   			 strip ( SELECT result . false_word
+						IN OBJECT mlp_operation . result_row )
+
+	ENDIF
+
+	format_details . limits [ count , 2 ] = " "
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_boolean_compare_action_message ( self          ,
+						   mlp_operation )
+
+{
+*	Error message for a boolean limit.
+*
+*******************************************************************************}
+
+	DECLARE message_ptr ,
+		pass_value
+
+	IF self . boolean_pass THEN
+
+		pass_value = strip ( SELECT result . true_word
+				     IN OBJECT mlp_operation . result_row )
+
+	ELSE
+
+		pass_value = strip ( SELECT result . false_word
+				     IN OBJECT mlp_operation . result_row )
+
+	ENDIF
+
+        message_fetch ( "RESULT_ENTRY_MLP_BOOLEAN_LIMIT",
+                         message_ptr                    )
+
+        message_add_parameter ( message_ptr          ,
+                                 strip ( pass_value ))
+
+	RETURN ( message_get_text ( message_ptr, 1  ))
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_setup ( self )
+
+{
+*	Set up a interval comparison
+*
+*******************************************************************************}
+
+	self . min_limit = SELECT limit_view . min_limit IN OBJECT self
+	self . max_limit = SELECT limit_view . max_limit IN OBJECT self
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_defined ( self )
+
+{
+*	Is the limit row valid for a numeric comparsion.
+*
+*******************************************************************************}
+
+	DECLARE min_limit ,
+		max_limit ,
+		defined
+
+	min_limit = self . min_limit
+	max_limit = self . max_limit
+
+	min_limit = strip ( min_limit )
+	max_limit = strip ( max_limit )
+
+	IF ( INDEX ( min_limit , ">" ) > 0 ) OR
+	   ( INDEX ( min_limit , "<" ) > 0 ) THEN
+
+		defined = TRUE
+
+	ELSEIF is_interval ( min_limit ) AND is_interval ( max_limit ) THEN
+
+		min_limit = interval ( min_limit )
+		max_limit = interval ( max_limit )
+
+		defined = ( min_limit <> interval ( 0 )) OR
+			  ( max_limit <> interval ( 0 ))
+
+	ELSE
+
+		defined = FALSE
+
+	ENDIF
+
+
+	RETURN ( defined )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_compare (       self          ,
+							  mlp_component ,
+							  mlp_operation )
+
+{
+*	Compare an interval limit.
+*
+*******************************************************************************}
+
+	DECLARE min_limit       ,
+		min_limit_value ,
+		max_limit       ,
+		max_limit_value ,
+		res_value       ,
+		status          ,
+		result_chevron  ,
+		limit_chevron   ,
+		result_limit    ,
+        	res_text
+
+	res_text = mlp_operation . result_value
+
+        IF ( INDEX ( res_text, "<" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_LT
+
+        ELSEIF ( INDEX ( res_text, ">" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_GT
+
+	ELSE
+
+		result_chevron = LIMIT_RESULT_CHEVRON_NONE
+
+	ENDIF
+
+	min_limit = self . min_limit
+	max_limit = self . max_limit
+
+	min_limit = strip ( min_limit )
+	max_limit = strip ( max_limit )
+
+	min_limit_value = interval ( min_limit )
+	max_limit_value = interval ( max_limit )
+
+
+	IF is_interval ( res_text ) THEN
+
+		res_value = interval ( res_text )
+
+	ELSE
+
+		res_value = interval ( 0 )
+
+	ENDIF
+
+	IF ( INDEX ( min_limit , "<=" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_LE
+
+	ELSEIF ( INDEX ( min_limit , "<" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_LT
+
+	ELSEIF ( INDEX ( min_limit , ">=" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_GE
+
+	ELSEIF ( INDEX ( min_limit , ">" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_GT
+
+	ELSE
+
+		limit_chevron = 0
+
+	ENDIF
+
+	IF limit_chevron <> 0 THEN
+
+		IF res_value < min_limit_value
+
+			result_limit = LIMIT_RESULT_LIMIT_LT
+
+		ELSEIF res_value > min_limit_value
+
+			result_limit = LIMIT_RESULT_LIMIT_GT
+
+		ELSE
+
+			result_limit = LIMIT_RESULT_LIMIT_EQ
+
+		ENDIF
+
+		status = lib_limit_open_ended_comparison [ result_chevron ,
+							   limit_chevron  ,
+							   result_limit   ]
+
+	ELSE
+
+		IF res_value < min_limit_value THEN
+
+			result_limit = LIMIT_RESULT_LT_MIN
+
+		ELSEIF res_value > max_limit_value THEN
+
+			result_limit = LIMIT_RESULT_GT_MAX
+
+		ELSE
+
+			result_limit = LIMIT_RESULT_IN_RANGE
+
+		ENDIF
+
+
+		status = lib_limit_normal_comparison [ result_chevron ,
+						       result_limit   ]
+
+	ENDIF
+
+
+	RETURN ( status )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_format (  self          ,
+						    mlp_component ,
+						    mlp_operation )
+
+{
+*	Format an interval limit.
+*
+*******************************************************************************}
+
+	DECLARE  format_details  ,
+		 count
+
+	format_details = mlp_operation . format_object
+   	format_details . header     = get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_I" , 1 )
+   	format_details . titles [1] = get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_I_GUI" , 1 )
+   	format_details . titles [2] = get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_I_GUI" , 2 )
+   	format_details . titles [3] = get_user_message ("RESULT_ENTRY_MLP_SCREEN_HEADER_I_GUI" , 3 )
+
+	count = format_details . next
+
+	format_details . limits [ count , 1 ] = strip ( self . min_limit ) :
+			                	strip ( SELECT mlp_components . units
+					                IN OBJECT mlp_component             )
+
+	IF ( INDEX ( self . min_limit , "<" ) = 0 ) AND
+	   ( INDEX ( self . min_limit , ">" ) = 0 ) THEN
+
+		format_details . limits [ count , 2 ] = strip ( self . max_limit ) :
+				                	strip ( SELECT mlp_components . units
+						                IN OBJECT mlp_component             )
+
+	ELSE
+
+		format_details . limits [ count , 2 ] = ""
+
+	ENDIF
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_message ( self          ,
+						    mlp_operation )
+
+{
+*	Error message for a interval limit.
+*
+*******************************************************************************}
+
+	DECLARE message_ptr
+
+         message_fetch ( "RESULT_ENTRY_MLP_INTERVAL_LIMIT",
+                          message_ptr                     )
+
+         message_add_parameter ( message_ptr              ,
+                                 strip ( self . min_limit ))
+         message_add_parameter ( message_ptr              ,
+                                 strip ( self . max_limit ))
+
+	RETURN ( message_get_text ( message_ptr, 1  ))
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+ROUTINE std_limit_interval_compare_action_debug (  self          ,
+						   mlp_component ,
+						   mlp_operation )
+
+{
+*	Debug a Interval limit.
+*
+*******************************************************************************}
+
+	DECLARE min_limit ,
+		max_limit
+
+	min_limit = self . min_limit
+	max_limit = self . max_limit
+
+literal
+	Min Limit $min_limit___________  Max Limit $max_limit______________
+$endliteral
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE lib_limit_is_calculated ( limit_object )
+
+{
+*	Determine if the limit is a calculated one .
+*	If it is then check to see if we need to reread it.
+*
+*******************************************************************************}
+
+	DECLARE calculated
+
+	calculated = FALSE
+
+	IF select limit_view . calculation IN OBJECT limit_object <> EMPTY THEN
+
+		calculated =  NOT blank ( select limit_view . calculation
+		                          IN OBJECT limit_object     )
+
+	ENDIF
+
+	RETURN ( calculated )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_limit_find (       mlp_component_object ,
+			       VALUE level_name           ,
+ 				     limit_object         )
+
+{
+*	Look in the object database for the given set of limits - if they
+*       aren't there then create the object and read the row.
+*       Return a boolean to indicate if the limit exists.
+*
+*******************************************************************************}
+
+	DECLARE object_name ,
+		entry_code  ,
+		defined
+
+	entry_code = SELECT mlp_components  . entry_code
+		        IN OBJECT mlp_component_object
+
+	object_name = entry_code : level_name
+
+	limit_object = LIMIT_COMPARE_DATABASE . get_by_index ( "OBJECT_NAME" ,
+								object_name  )
+
+	IF limit_object = EMPTY THEN
+
+		CREATE OBJECT LIMIT_COMPARE_BASE_CLASS, limit_object
+
+
+		{ Now put it into the object database }
+		limit_object . object_name = object_name
+
+		LIMIT_COMPARE_DATABASE . add ( limit_object )
+
+	ENDIF
+
+	IF lib_limit_is_calculated ( limit_object ) THEN
+
+		defined = TRUE
+
+	ELSE
+
+		defined = limit_object . defined ()
+
+	ENDIF
+
+        RETURN ( defined )
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL ROUTINE lib_limit_limit_debug ( limit_object )
+
+	DECLARE temp   ,
+		level  ,
+		entry
+
+        temp   = limit_object . object_name
+	entry  = substring ( temp , 1, 10)
+	level  = temp # entry
+
+literal
+	Level     : $Level_______________________________________
+
+$endliteral
+
+	IF limit_object . exists THEN
+
+		limit_object . debug ()
+
+	ENDIF
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_calculate (       limit_object  ,
+				    mlp_operation ,
+				    mlp_component ,
+			      VALUE mode          )
+
+{
+*	Call the calculation routine
+*
+*
+*******************************************************************************}
+
+	DECLARE answer      ,
+		calculation ,
+		message_ptr
+
+	calculation = select limit_view . calculation IN OBJECT  limit_object
+
+	CALL_ROUTINE "limit_calculation"
+		IN LIMIT_CALCULATION_LIBRARY calculation
+		USING limit_object  ,
+		      mlp_operation ,
+		      mlp_component ,
+		      mode
+		NEW CONTEXT
+		RETURNING answer
+
+	IF  ( answer <> MLP_CONST_PASS          ) AND
+	    ( answer <> MLP_CONST_INDETERMINATE ) AND
+	    ( answer <> MLP_CONST_FAIL          ) AND
+	    ( answer <> MLP_CONST_COMPARE       ) THEN
+
+		message_fetch ( "RESULT_ENTRY_INVALID_CALC",
+				 message_ptr               )
+
+		message_add_parameter ( message_ptr ,
+				        answer      )
+
+		flash_message ( message_get_text ( message_ptr, 1 ),
+				TRUE                               )
+
+		answer = MLP_CONST_FAIL
+
+	ENDIF
+
+	RETURN ( answer )
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_calculate_debug (       limit_object  ,
+				          mlp_operation ,
+				          mlp_component ,
+			            VALUE mode          ,
+				    VALUE calculation   ,
+				    VALUE debug_mode	)
+
+{
+*	Call the calculation routine
+*
+*
+*******************************************************************************}
+
+	DECLARE answer
+
+	IF debug_mode THEN
+
+		CALL_ROUTINE "limit_calculation"
+			IN LIMIT_CALCULATION_LIBRARY calculation
+			USING limit_object  ,
+			      mlp_operation ,
+			      mlp_component ,
+  			      mode
+			DEBUG CONTEXT
+			RETURNING answer
+
+	ELSE
+
+		CALL_ROUTINE "limit_calculation"
+			IN LIMIT_CALCULATION_LIBRARY calculation
+			USING limit_object  ,
+			      mlp_operation ,
+			      mlp_component ,
+  			      mode
+			NEW CONTEXT
+			RETURNING answer
+
+	ENDIF
+
+	limit_object . status = answer
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_operation (       mlp_operation ,
+		                    mlp_component ,
+			            limit_object  ,
+			      VALUE operation	  )
+
+{
+*	Perform the comparison .
+*
+*******************************************************************************}
+
+	DECLARE  status
+
+	IF operation = "UPDATE" THEN
+
+		IF lib_limit_is_calculated ( limit_object ) THEN
+
+			lib_limit_calculate ( limit_object  ,
+					      mlp_operation ,
+					      mlp_component ,
+					      operation     )
+
+
+		ENDIF
+
+	ELSEIF lib_limit_is_calculated ( limit_object ) THEN
+
+		status = lib_limit_calculate ( limit_object  ,
+					       mlp_operation ,
+					       mlp_component ,
+					       operation     )
+
+		IF status = MLP_CONST_COMPARE THEN
+
+			status = limit_object . ?operation? ( mlp_component ,
+						              mlp_operation )
+
+      		ENDIF
+
+		limit_object . status = status
+
+	ELSE
+
+		status = limit_object . ?operation? ( mlp_component ,
+						      mlp_operation )
+
+		limit_object . status = status
+
+	ENDIF
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_operation_debug (       mlp_operation ,
+		                          mlp_component ,
+			                  limit_object  ,
+			            VALUE operation	  )
+
+{
+*	Perform the comparison .
+*
+*******************************************************************************}
+
+	DECLARE  status
+
+	IF operation = "UPDATE" THEN
+
+	ELSE
+
+		status = limit_object . ?operation? ( mlp_component ,
+						      mlp_operation )
+
+		limit_object . status = status
+
+	ENDIF
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_create_object ( VALUE level_entry_code  ,
+				  VALUE limit_entry_code  ,
+				  VALUE level_name        ,
+			          VALUE datatype          )
+
+{
+*	Create a limit object.
+*
+*******************************************************************************}
+
+	DECLARE limit_object  ,
+		message_ptr
+
+	IF datatype = "N" THEN
+
+		CREATE OBJECT LIMIT_COMPARE_NUMERIC_CLASS, limit_object
+
+	ELSEIF datatype = "T" THEN
+
+		CREATE OBJECT LIMIT_COMPARE_TEXT_CLASS, limit_object
+
+	ELSEIF datatype = "O" THEN
+
+		CREATE OBJECT LIMIT_COMPARE_TEXT_CLASS, limit_object
+
+	ELSEIF datatype = "B" THEN
+
+		CREATE OBJECT LIMIT_COMPARE_BOOLEAN_CLASS, limit_object
+
+	ELSEIF datatype = "I" THEN
+
+		CREATE OBJECT LIMIT_COMPARE_INTERVAL_CLASS, limit_object
+
+	ELSE
+
+		message_fetch ( "RESULT_ENTRY_UNKNOWN_LIMIT_TYPE",
+				 message_ptr                     )
+
+		message_add_parameter ( message_ptr ,
+					datatype    )
+
+		fatal_error ( message_get_text ( message_ptr,1))
+
+	ENDIF
+
+
+	{ Try to find the row in the limit table           }
+	{ Check to see it it is the currently selected row }
+
+	object_copy_current_table (  limit_object ,
+				    "limit_view"  )
+
+	limit_object . object_name = limit_entry_code : level_name
+
+	LIMIT_COMPARE_DATABASE . add ( limit_object )
+
+	limit_object . setup ()
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_read_all_limits ( VALUE level_entry_code  ,
+				    VALUE limit_entry_code  ,
+			            VALUE datatype          )
+
+{
+*	Read in a batch of limits for a given entry_code .
+*
+*******************************************************************************}
+
+	DECLARE level_name   ,
+		limit_object ,
+		object_name
+
+	level_name = select limit_view . level_id
+		     WHERE ( level_entry_code = level_entry_code ) AND
+			   ( limit_entry_code = limit_entry_code )
+
+
+	WHILE level_name <> EMPTY DO
+
+		object_name = limit_entry_code : level_name
+
+		limit_object = LIMIT_COMPARE_DATABASE . get_by_index ( "OBJECT_NAME" ,
+									object_name  )
+
+		IF limit_object = EMPTY THEN
+
+			lib_limit_create_object ( level_entry_code ,
+						  limit_entry_code ,
+						  level_name       ,
+						  datatype         )
+
+		ENDIF
+
+		NEXT limit_view
+		level_name = select limit_view . level_id
+
+	ENDWHILE
+
+ENDROUTINE
+
+{******************************************************************************}
+
+GLOBAL
+
+ROUTINE lib_limit_numeric_compare ( VALUE res_text  ,
+                                    VALUE res_value ,
+                                    VALUE min_limit ,
+                                    VALUE max_limit )
+
+{
+*	Compare a numeric limit.
+*
+*******************************************************************************}
+
+	DECLARE min_limit_value ,
+		max_limit_value ,
+		status          ,
+		result_chevron  ,
+		limit_chevron   ,
+		result_limit
+
+	IF ( INDEX ( res_text, ">=" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_GE
+
+	ELSEIF ( INDEX ( res_text, "<=" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_LE
+
+	ELSEIF ( INDEX ( res_text, "<" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_LT
+
+	ELSEIF ( INDEX ( res_text, ">" ) > 0 ) THEN
+
+		result_chevron = LIMIT_RESULT_CHEVRON_GT
+
+	ELSE
+
+		result_chevron = LIMIT_RESULT_CHEVRON_NONE
+
+	ENDIF
+
+	min_limit = strip ( min_limit )
+	max_limit = strip ( max_limit )
+
+	IF ( INDEX ( min_limit , "<=" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_LE
+		min_limit = min_limit # "<="
+
+	ELSEIF ( INDEX ( min_limit , "<" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_LT
+		min_limit = min_limit # "<"
+
+	ELSEIF ( INDEX ( min_limit , ">=" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_GE
+		min_limit = min_limit # ">="
+
+	ELSEIF ( INDEX ( min_limit , ">" ) > 0 ) THEN
+
+		limit_chevron = LIMIT_LIMIT_CHEVRON_GT
+		min_limit = min_limit # ">"
+
+	ELSE
+
+		limit_chevron = 0
+
+	ENDIF
+
+	min_limit_value = numeric ( min_limit )
+	max_limit_value = numeric ( max_limit )
+
+	IF limit_chevron <> 0 THEN
+
+		IF res_value < min_limit_value
+
+			result_limit = LIMIT_RESULT_LIMIT_LT
+
+		ELSEIF res_value > min_limit_value
+
+			result_limit = LIMIT_RESULT_LIMIT_GT
+
+		ELSE
+
+			result_limit = LIMIT_RESULT_LIMIT_EQ
+
+		ENDIF
+
+		status = lib_limit_open_ended_comparison [ result_chevron ,
+							   limit_chevron  ,
+							   result_limit   ]
+
+	ELSE
+
+		IF res_value < min_limit_value THEN
+
+			result_limit = LIMIT_RESULT_LT_MIN
+
+		ELSEIF res_value > max_limit_value THEN
+
+			result_limit = LIMIT_RESULT_GT_MAX
+
+		ELSEIF result_chevron = LIMIT_RESULT_CHEVRON_GT THEN
+
+			IF res_value = max_limit_value THEN
+
+				result_limit = LIMIT_RESULT_GT_MAX
+
+			ELSE
+
+				result_limit = LIMIT_RESULT_IN_RANGE
+
+			ENDIF
+
+		ELSEIF result_chevron = LIMIT_RESULT_CHEVRON_LT THEN
+
+			IF res_value = min_limit_value THEN
+
+				result_limit = LIMIT_RESULT_LT_MIN
+
+			ELSE
+
+				result_limit = LIMIT_RESULT_IN_RANGE
+
+			ENDIF
+
+		ELSE
+
+			result_limit = LIMIT_RESULT_IN_RANGE
+
+		ENDIF
+
+
+		status = lib_limit_normal_comparison [ result_chevron ,
+						       result_limit   ]
+
+	ENDIF
+
+
+	RETURN ( status )
+
+ENDROUTINE
+
+{******************************************************************************}
+{******************************************************************************}
+{******************************************************************************}

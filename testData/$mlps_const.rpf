@@ -1,0 +1,25 @@
+{******************************************************************************
+*
+* Module Name   : $MLP_CONST.RPF
+*
+* Purpose       : Standard constants used by the MLP comparison system.
+*
+*
+* Document Ref. : 
+*
+* Specification : 
+*
+* Portability   : Not Checked
+*
+* Re-entrant    : Yes
+*
+*******************************************************************************}
+
+GLOBAL CONSTANT MLP_CONST_PASS          = "P"
+GLOBAL CONSTANT MLP_CONST_INDETERMINATE = "I"
+GLOBAL CONSTANT MLP_CONST_FAIL          = "F"
+
+GLOBAL CONSTANT MLP_CONST_COMPARE       = "C"
+
+GLOBAL CONSTANT MLP_CONST_NULL_ANALYSIS = "$NULL"
+

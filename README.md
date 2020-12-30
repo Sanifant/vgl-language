@@ -1,4 +1,5 @@
-# vgl-language README
+# SampleManager(R) development extension
+![Node.js CI](https://github.com/Sanifant/vgl-language/workflows/Node.js%20CI/badge.svg?branch=development)
 
 This extension can be used to help you with SampleManager VGL deployment.
 

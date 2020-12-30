@@ -2,7 +2,7 @@
 	"name": "vgl-language",
 	"displayName": "VGL Language",
 	"description": "SampleManager support extension",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
 	"repository": {

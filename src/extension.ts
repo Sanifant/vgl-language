@@ -10,13 +10,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
-            {scheme: "file", language: "vgl-report"}, 
+            {scheme: "file", language: "vgl-language"}, 
             new ReportOutlineProvider())
     );
 
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
-            {scheme: "file", language: "vgl-structure"}, 
+            {scheme: "file", language: "sm-structure"}, 
             new StructureOutlineProvider())
     );
 }

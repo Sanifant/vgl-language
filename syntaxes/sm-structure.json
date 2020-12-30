@@ -1,0 +1,84 @@
+{
+    "scopeName": "source.sm-structure",
+    "fileTypes": [ ],
+    "name": "sm-structure",
+    "patterns": [
+        { "include": "#keyword" },
+        { "include": "#comment" },
+        { "include": "#literal" }
+    ],
+
+    "repository": {
+        "keyword": {
+            "patterns": [
+                { "include": "#keyword-configuration"},
+                { "include": "#keyword-statement" },
+                { "include": "#keyword-datatype" },
+                { "include": "#keyword-parameter" }
+            ]
+        },
+        "keyword-configuration": {
+            "name": "storage.config.sm-structure",
+            "match": "(?i)\\b(index_defaults|table_defaults)\\b"
+        },
+        "keyword-statement": {
+            "name": "storage.type.sm-structure",
+            "match": "(?i)\\b(index|view|table|field|collection|sequence)\\b"
+        },
+        "keyword-datatype": {
+            "name": "datatype.type.sm-structure",
+            "match": "(?i)\\b(datatype)\\s+(boolean|date|identity|integer|interval|packed_decimal|real|text|guid)(\\s*\\(([0-9]+)\\))?\\b",
+            "captures": {
+                "1": { "name": "keyword.other.sm-structure" },
+                "2": { "name": "support.type.sm-structure" },
+                "4": { "name": "constant.numeric.sm-structure" }
+            }
+        },
+        "keyword-parameter": {
+            "name": "keyword.other.sm-structure",
+            "match": "(?i)\\b(alias|allowed_characters|as|blob|case_sensitive|choose_type|default|delete_audit|descending|false_word|false|format|identities|insert_audit|library|links_to|lower_limit|modify_audit|nobuffer|noidentities|noindex|on|on_table|oracle_location|oracle_specific|parent|parent_table|phrase_type|physical_name|prompt|prompt_description|prompt_type|rdb_location|rdb_specific|read_only|rename_table|routine|silent|sqlserver_collation|sqlserver_collation_case_sensitive|sqlserver_use_nvarchar|sqlserver_location|sqlserver_specific|tableset|true_word|true|unique|upper_limit|used_for|valid|using|major|minor)\\b"
+        },
+
+        "literal": {
+            "patterns": [
+                { "include": "#literal-string" },
+                { "include": "#literal-numeric" },
+                { "include": "#literal-special" },
+                { "include": "#literal-sql" }
+            ]
+        },
+        "literal-string": {
+            "name": "string.quoted.single.sm-structure",
+            "match": "'[^']*'"
+        },
+        "literal-numeric": {
+            "name": "constant.numeric.sm-structure",
+            "match": "\\s*-?([0-9]+(\\.[0-9]+)?)\\b"
+        },
+        "literal-special": {
+            "name": "constant.language.sm-structure",
+            "match": "(?i)\\bnull\\b"
+        },
+        "literal-sql": {
+            "name": "markup.raw.sm-structure",
+            "begin": "(?i)\\b(select_clause|(oracle|sqlserver|rdb)_specific_select)\\b",
+            "end": ";",
+            "beginCaptures": {
+                "0": { "name": "sql.sm-structure.open" }
+            },
+            "endCaptures": {
+                "0": { "name": "sql.sm-structure.close" }
+            }
+
+        },
+
+        "comment": {
+            "patterns": [{ "include": "#comment-block" }]
+        },
+        "comment-block": {
+            "name": "comment.block.sm-structure",
+            "begin": "\\{",
+            "end": "\\}"
+        }
+    }
+}

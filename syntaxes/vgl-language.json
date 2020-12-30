@@ -1,0 +1,119 @@
+{
+    "scopeName": "source.vgl-language",
+    "fileTypes": [
+        "*.rpf",
+        "*.sxf",
+        "*.caf" ],
+    "name": "vgl-language",
+    "patterns": [
+        { "include": "#comment" },
+        { "include": "#literal" },
+        { "include": "#expression" },
+        { "include": "#keyword" }
+    ],
+
+    "repository": {
+        "comment": {
+            "patterns": [{ "include": "#comment-block" }]
+        },
+        "comment-block": {
+            "name": "comment.block.vgl-language",
+            "begin": "\\{",
+            "end": "\\}"
+        },
+
+        "literal": {
+            "patterns": [
+                { "include": "#literal-string-single" },
+                { "include": "#literal-string-double" },
+                { "include": "#literal-string-bang" },
+                { "include": "#literal-numeric" },
+                { "include": "#literal-special" }
+            ]
+        },
+        "literal-string-single": {
+            "name": "string.interpolated.vgl-language",
+            "match": "'[^']*'"
+        },
+        "literal-string-double": {
+            "name": "string.quoted.double.vgl-language",
+            "match": "\"[^\"]*\""
+        },
+        "literal-string-bang": {
+            "name": "string.interpolated.vgl-language",
+            "match": "![^!]+!"
+        },
+        "literal-numeric": {
+            "name": "constant.numeric.vgl-language",
+            "match": "\\s*-?([0-9]+(\\.[0-9]+)?)\\b"
+        },
+        "literal-special": {
+            "name": "constant.language.vgl-language",
+            "match": "(?i)\\b(null|empty|locked|error|true|false)\\b"
+        },
+
+        "expression": {
+            "patterns": [
+                { "include": "#expression-member" },
+                { "include": "#expression-assignment" }
+            ]
+        },
+        "expression-member": {
+            "name": "meta.expression.member.vgl-language",
+            "match": "(?i)\\.\\s*[a-z_][a-z0-9_]*\\b"
+        },
+        "expression-assignment": {
+            "name": "meta.expression.assignment.vgl-language",
+            "match": "(?i)\\b[a-z_][a-z0-9_]*(?=\\s*=)\\b"
+        },
+
+        "keyword": {
+            "patterns": [
+                { "include": "#keyword-builtin-function" },
+                { "include": "#keyword-builtin-statement" },
+                { "include": "#keyword-join" },
+                { "include": "#keyword-literal" },
+                { "include": "#keyword-type" },
+                { "include": "#keyword-control" },
+                { "include": "#keyword-operator" },
+                { "include": "#keyword-header" },
+                { "include": "#keyword-global" }
+            ]
+        },
+        "keyword-builtin-function": {
+            "name": "support.function.vgl-language",
+            "match": "(?i)\\b(global|ascii|length|leftstring|rightstring|midstring|strip|justify|pad|blank|index|substitute|substring)(?=\\s*\\()\\b"
+        },
+        "keyword-builtin-statement": {
+            "name": "support.function.vgl-language",
+            "match": "(?i)\\b(prompt\\s+for|flush_literal|set\\s+((date\\s+)?format|notprotected|compile_option\\s+declare|printercodes|length|width|name)|restore\\s+(date\\s+)?format|prompt\\s+object|browse\\s+on|define\\s+class|end\\s+class|class|with|format|select|where|order\\s+on|in\\s+object|create\\s+object|initialisation|properties|actions|enable\\s+windows|call_routine|in\\s+library|for\\s+update|assign|update|commit|rollback|using|then\\s+select|on\\s+new\\s+page|endon)\\b"
+        },
+        "keyword-join": {
+            "name": "support.function.vgl-language",
+            "match": "(?i)\\bjoin\\s+(library|standard_library)\\s+([$a-z_][0-9a-z_]*)\\b",
+            "captures": {
+                "2": { "name": "support.class.vgl-language" }
+            }
+        },
+        "keyword-literal": {
+            "name": "support.function.vgl-language",
+            "match": "(?i)^(literal|\\$endliteral)$"
+        },
+        "keyword-type": {
+            "name": "storage.type.vgl-language",
+            "match": "(?i)\\b(declare|(global\\s+)?constant|array|arraysize|value)\\b"
+        },
+        "keyword-control": {
+            "name": "keyword.control.vgl-language",
+            "match": "(?i)\\b(if|then|elseif|else|endif|while|do|endwhile|(global\\s+)?routine|endroutine|exit|repeat|until|return(?=\\s*\\())\\b"
+        },
+        "keyword-operator": {
+            "name": "keyword.control.vgl-language",
+            "match": "(?i)\\b(and|or|not|div|mod)\\b"
+        },
+        "keyword-global": {
+            "name": "keyword.control.vgl-language",
+            "match": "(?i)^global$"
+        }
+    }
+}

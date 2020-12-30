@@ -31,11 +31,11 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
             let routineName = matches.groups.tableName;
             let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-            console.timeLog("structure", `\tFound Routine ${routineName}`);
+            console.timeLog("structure", `\tFound Table ${routineName}`);
 
             let symbol = new vscode.DocumentSymbol(
                     routineName, 
-                    'Component',
+                    'Table',
                     vscode.SymbolKind.Key,
                     range,
                     range

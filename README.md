@@ -5,28 +5,33 @@ This extension can be used to help you with SampleManager VGL deployment.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### vgl coding
 
-For example if there is an image subfolder under your extension project workspace:
+Simple syntax highlighting is provided.
+Also the functions as they where found in the report will be shown in the outline box
 
-\!\[feature X\]\(images/feature-x.png\)
+![Outline Box](media/vgl-outline.png)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## structure file
+
+Simple syntax highlighting is provided.
+Also the tables where shown in the outline box
+
+![Outline Box](media/structure-outline.png)
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+FOr the full functionality a SampleManager installation should ve available.
+This extension set was only tested with versions higher than 12.1.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `sampleManager.Instance.Name`: Name of the SampleManager Instance
+* `sampleManager.Instance.Folder`: Folder of the SampleManager Instance
+* `sampleManager.Installation.Folder`: Folder of the SampleManager Base Installation
+* `sampleManager.Installation.Version`: Version of SampleManager being installed
 
 ## Known Issues
 
@@ -36,31 +41,7 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 Users appreciate release notes as you update your extension.
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+### >1.0.0
+beta release!!!
+Once the first version/release is created, the subsequent minor versions will be described here
+Until the first version (1.0.0) I will add functionality as finalised the piece of codeing.

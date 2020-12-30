@@ -6,8 +6,7 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     private symbols: vscode.DocumentSymbol[];
 
     constructor() {
-        console.time("executionTime"); 
-        this.routinePattern = /(?<!END)((?<global>global|GLOBAL)\s+)?(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
+        this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_]+\s*,?)*\))?/gi;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -22,28 +21,65 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     }
 
     private parseDocument(document: vscode.TextDocument): void {
-        console.timeLog("executionTime", "\tparsing document");
+        console.time("reportParsing");
+        console.timeLog("reportParsing", "Parsing document");
         const regex = new RegExp(this.routinePattern);
         let matches: RegExpExecArray;
-        while ((matches = regex.exec(document.getText())) !== null) {
-            let selectionStart = matches.index;
-            let global = matches.groups.global;
-            let selectionEnd = regex.lastIndex;
-            let routineName = matches.groups.routineName;
-            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+        try {
+            while ((matches = regex.exec(document.getText())) !== null) {
+                let selectionStart = matches.index;
+                let global = matches.groups.global;
+                let selectionEnd = regex.lastIndex;
+                let routineName = matches.groups.routineName;
+                let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-            console.timeLog("executionTime", `\tFound Routine ${routineName}`);
+                if(routineName)
+                {
+                    console.timeLog("reportParsing", `\tFound Routine ${routineName} in line ${document.positionAt(selectionStart).line}`);
 
-            let symbol = new vscode.DocumentSymbol(
-                routineName, 
-                'Component',
-                vscode.SymbolKind.Function,
-                range,
-                range
-                );            
-            
-            this.symbols.push(symbol);
+                    let symbol = new vscode.DocumentSymbol(
+                        routineName, 
+                        global,
+                        vscode.SymbolKind.Function,
+                        range,
+                        range
+                        );
+                        
+                    let paramString = matches.groups.parameters;
+                    
+                    if(paramString)
+                    {
+                        let variables = paramString.replace("(", "").replace(")", "").replace(/value/gi, "").split(",");
+
+                        while(variables.length > 0)
+                        {
+                            let variable = variables.pop().trim();
+                            console.log(`\tFound Parameter ${variable}`);
+
+                            let parameter = new vscode.DocumentSymbol(
+                                variable, 
+                                'Component',
+                                vscode.SymbolKind.Key,
+                                range,
+                                range
+                                );
+
+                            symbol.children.push(parameter);
+                        }
+                    }
+
+                    this.symbols.push(symbol);
+                }
+            }
+                
+        } catch (error) {
+
+            console.timeLog("reportParsing", `***\tERROR ${error}`);
+
+        } finally {
+
+            console.timeEnd("reportParsing");
+
         }
-
     }
 }

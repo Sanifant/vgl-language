@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 
 export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     
-    private text: string;
-	private editor: vscode.TextEditor;
     private routinePattern: RegExp;
     private symbols: vscode.DocumentSymbol[];
 
@@ -17,32 +15,31 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
         {
             this.symbols = [];
 
-            this.text = document.getText();
-
-            this.parseDocument();
+            this.parseDocument(document);
 
             resolve(this.symbols);
         });
     }
 
-    private parseDocument(): void {
+    private parseDocument(document: vscode.TextDocument): void {
         console.timeLog("executionTime", "\tparsing document");
         const regex = new RegExp(this.routinePattern);
         let matches: RegExpExecArray;
-        while ((matches = regex.exec(this.text)) !== null) {
+        while ((matches = regex.exec(document.getText())) !== null) {
             let selectionStart = matches.index;
             let global = matches.groups.global;
             let selectionEnd = regex.lastIndex;
             let routineName = matches.groups.routineName;
+            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
             console.timeLog("executionTime", `\tFound Routine ${routineName}`);
 
             let symbol = new vscode.DocumentSymbol(
-                    routineName, 
-                    'Component',
-                    vscode.SymbolKind.Function,
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
+                routineName, 
+                'Component',
+                vscode.SymbolKind.Function,
+                range,
+                range
                 );            
             
             this.symbols.push(symbol);

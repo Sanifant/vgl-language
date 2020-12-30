@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 
 export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     
-    private text: string;
-	private editor: vscode.TextEditor;
     private routinePattern: RegExp;
     private symbols: vscode.DocumentSymbol[];
 
@@ -17,38 +15,21 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
         {
             this.symbols = [];
 
-            //this.text = document.getText();
-
-            //this.parseDocument();
-
-            let selectionStart = 1;
-            let selectionEnd = 2;
-
-            for (const value in vscode.SymbolKind) {
-                console.timeLog("structure", `\tValue: ${value}`);
-                this.symbols.push(
-                    new vscode.DocumentSymbol(`Value: ${value}`,
-                        "Component",
-                        vscode.SymbolKind.Array,
-                        new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
-                        new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
-                        )
-                );
-            }
-
+            this.parseDocument(document);
+            
             resolve(this.symbols);
         });
     }
 
-    private parseDocument(): void {
+    private parseDocument(document: vscode.TextDocument): void {
         console.timeLog("structure", "\tparsing document");
         const regex = new RegExp(this.routinePattern);
         let matches: RegExpExecArray;
-        while ((matches = regex.exec(this.text)) !== null) {
+        while ((matches = regex.exec(document.getText())) !== null) {
             let selectionStart = matches.index;
-            let global = matches.groups.global;
             let selectionEnd = regex.lastIndex;
             let routineName = matches.groups.tableName;
+            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
             console.timeLog("structure", `\tFound Routine ${routineName}`);
 
@@ -56,8 +37,8 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                     routineName, 
                     'Component',
                     vscode.SymbolKind.Key,
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
+                    range,
+                    range
                 );            
             
             this.symbols.push(symbol);

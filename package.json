@@ -16,8 +16,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onLanguage:vgl-structure",
-		"onLanguage:vgl-report"
+		"onStartupFinished"
 	],
 	"main": "./out/extension.js",
 	"contributes": {

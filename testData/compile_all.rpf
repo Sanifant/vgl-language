@@ -42,7 +42,7 @@ EXIT
 
 {------------------------------------------------------------------------------}
 
-ROUTINE compile_syntaxes
+GLOBAL ROUTINE compile_syntaxes
 
    DECLARE syn_id, compiled
 
@@ -125,7 +125,7 @@ ENDROUTINE
 
 {------------------------------------------------------------------------------}
 
-ROUTINE compile_sig_figs
+GLOBAL ROUTINE compile_sig_figs
 
    DECLARE sf_id, compiled
 

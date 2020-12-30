@@ -1,6 +1,6 @@
 # vgl-language README
 
-This is the README for your extension "vgl-language". After writing up a brief description, we recommend including the following sections.
+This extension can be used to help you with SampleManager VGL deployment.
 
 ## Features
 

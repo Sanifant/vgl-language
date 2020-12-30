@@ -2,7 +2,6 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { Routine } from '../../reportOutline';
 import {activate, getDocUri} from './helper';
 
 suite('Extension Test Suite', () => {

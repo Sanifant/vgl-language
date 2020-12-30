@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
+export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     
     private text: string;
 	private editor: vscode.TextEditor;
@@ -8,8 +8,8 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     private symbols: vscode.DocumentSymbol[];
 
     constructor() {
-        console.time("executionTime"); 
-        this.routinePattern = /(?<!END)((?<global>global|GLOBAL)\s+)?(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
+        console.time("structure"); 
+        this.routinePattern = /(table|TABLE)\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/g;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -17,30 +17,45 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
         {
             this.symbols = [];
 
-            this.text = document.getText();
+            //this.text = document.getText();
 
-            this.parseDocument();
+            //this.parseDocument();
+
+            let selectionStart = 1;
+            let selectionEnd = 2;
+
+            for (const value in vscode.SymbolKind) {
+                console.timeLog("structure", `\tValue: ${value}`);
+                this.symbols.push(
+                    new vscode.DocumentSymbol(`Value: ${value}`,
+                        "Component",
+                        vscode.SymbolKind.Array,
+                        new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
+                        new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
+                        )
+                );
+            }
 
             resolve(this.symbols);
         });
     }
 
     private parseDocument(): void {
-        console.timeLog("executionTime", "\tparsing document");
+        console.timeLog("structure", "\tparsing document");
         const regex = new RegExp(this.routinePattern);
         let matches: RegExpExecArray;
         while ((matches = regex.exec(this.text)) !== null) {
             let selectionStart = matches.index;
             let global = matches.groups.global;
             let selectionEnd = regex.lastIndex;
-            let routineName = matches.groups.routineName;
+            let routineName = matches.groups.tableName;
 
-            console.timeLog("executionTime", `\tFound Routine ${routineName}`);
+            console.timeLog("structure", `\tFound Routine ${routineName}`);
 
             let symbol = new vscode.DocumentSymbol(
                     routineName, 
                     'Component',
-                    vscode.SymbolKind.Function,
+                    vscode.SymbolKind.Key,
                     new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
                     new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
                 );            

@@ -7,7 +7,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
     constructor() {
         console.time("structure"); 
-        this.routinePattern = /(table|TABLE)\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/g;
+        this.routinePattern = /(?<![a-z_])table\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -28,7 +28,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
         while ((matches = regex.exec(document.getText())) !== null) {
             let selectionStart = matches.index;
             let selectionEnd = regex.lastIndex;
-            let routineName = matches.groups.tableName;
+            let routineName = matches.groups.tableName.toLocaleLowerCase();
             let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
             console.timeLog("structure", `\tFound Table ${routineName}`);

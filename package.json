@@ -5,6 +5,10 @@
 	"version": "0.0.2",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
+	"homepage": "https://github.com/Sanifant/vgl-language/blob/master/README.md",
+	"bugs": {
+		"url": "https://github.com/Sanifant/vgl-language/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Sanifant/vgl-language"
@@ -18,7 +22,14 @@
 		"vscode": "^1.52.0"
 	},
 	"categories": [
-		"Other"
+		"Formatters",
+		"Programming Languages"
+	],
+	"keywords": [
+		"vgl",
+		"structure",
+		"samplemanager",
+		"LIMS"
 	],
 	"activationEvents": [
 		"onStartupFinished",

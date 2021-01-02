@@ -8,9 +8,16 @@ This extension can be used to help you with SampleManager VGL deployment.
 ### vgl coding
 
 Simple syntax highlighting is provided.
-Also the functions as they where found in the report will be shown in the outline box
+The Outline Box will show the classes and the corresponding functions.
 
 ![Outline Box](media/vgl-outline.png)
+
+
+The class functions will be renamed according to the classes.
+
+*class_action_function* will be shown as *function* while classname and action keyword is being removed from outline.
+
+Constructor will have the same name as the class, while *class_initialisation* is being removed.
 
 ## structure file
 
@@ -43,5 +50,5 @@ Users appreciate release notes as you update your extension.
 
 ### >1.0.0
 beta release!!!
+
 Once the first version/release is created, the subsequent minor versions will be described here
-Until the first version (1.0.0) I will add functionality as finalised the piece of codeing.

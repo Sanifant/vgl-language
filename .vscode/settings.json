@@ -10,5 +10,6 @@
     "typescript.tsc.autoDetect": "off",
     "cSpell.words": [
         "VGSM"
-    ]
+    ],
+    "svg.preview.background": "transparent"
 }

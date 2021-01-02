@@ -2,14 +2,13 @@ import * as vscode from 'vscode';
 
 export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     
-    private text: string;
-	private editor: vscode.TextEditor;
     private routinePattern: RegExp;
+    private classPattern: RegExp;
     private symbols: vscode.DocumentSymbol[];
 
     constructor() {
-        console.time("executionTime"); 
-        this.routinePattern = /(?<!END)((?<global>global|GLOBAL)\s+)?(routine|ROUTINE)\s+(?<routineName>[a-z_]*)(\s*\((\s*(VALUE)?\s*[a-z_]+\s*,?)*\))?/g;
+        this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_]+\s*,?)*\))?/gi;
+        this.classPattern = /(define class)\s(?<className>[a-z_]*)/gi;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -17,36 +16,137 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
         {
             this.symbols = [];
 
-            this.text = document.getText();
-
-            this.parseDocument();
+            this.parseDocument(document);
 
             resolve(this.symbols);
         });
     }
 
-    private parseDocument(): void {
-        console.timeLog("executionTime", "\tparsing document");
-        const regex = new RegExp(this.routinePattern);
+    private parseDocument(document: vscode.TextDocument): void {
+        console.time("reportParsing");
+        console.timeLog("reportParsing", "Parsing document");
+        let regex = new RegExp(this.classPattern);
         let matches: RegExpExecArray;
-        while ((matches = regex.exec(this.text)) !== null) {
-            let selectionStart = matches.index;
-            let global = matches.groups.global;
-            let selectionEnd = regex.lastIndex;
-            let routineName = matches.groups.routineName;
+        let classes: vscode.DocumentSymbol[] = [];
+        try {
+            while ((matches = regex.exec(document.getText())) !== null) {
+                let selectionStart = matches.index;
+                let selectionEnd = regex.lastIndex;
+                let className = matches.groups.className.toLocaleLowerCase();
+                let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-            console.timeLog("executionTime", `\tFound Routine ${routineName}`);
+                if(className)
+                {
+                    console.timeLog("reportParsing", `\tFound Class ${className} in line ${document.positionAt(selectionStart).line}`);
 
-            let symbol = new vscode.DocumentSymbol(
-                    routineName, 
-                    'Component',
-                    vscode.SymbolKind.Function,
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd)), 
-                    new vscode.Range(this.editor.document.positionAt(selectionStart), this.editor.document.positionAt(selectionEnd))
-                );            
-            
-            this.symbols.push(symbol);
+                    let symbol = new vscode.DocumentSymbol(
+                        className, 
+                        "",
+                        vscode.SymbolKind.Class,
+                        range,
+                        range
+                        );
+
+                    classes.push(symbol);
+                }
+            }
+                
+        } catch (error) {
+
+            console.timeLog("reportParsing", `***\tERROR ${error}`);
+
+        } finally {
+
+            console.timeEnd("reportParsing");
+
         }
 
+        regex = new RegExp(this.routinePattern);
+        try {
+            while ((matches = regex.exec(document.getText())) !== null) {
+                let selectionStart = matches.index;
+                let global = matches.groups.global;
+                let selectionEnd = regex.lastIndex;
+                let routineName = matches.groups.routineName.toLocaleLowerCase();
+                let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+                let routineIcon = vscode.SymbolKind.Function;
+
+                if(routineName)
+                {
+                    let classToAdd:vscode.DocumentSymbol;
+                    for(var i = 0;i<classes.length;i++) { 
+                        let tempClass = classes[i];
+                        if(routineName.startsWith(tempClass.name))
+                        {
+                            classToAdd = tempClass;
+                            routineName = routineName.substring(tempClass.name.length + 1);
+                        }
+                     }
+                    console.timeLog("reportParsing", `\tFound Routine ${routineName} in line ${document.positionAt(selectionStart).line}`);
+                    
+                    if(routineName.startsWith("action_"))
+                    {
+                        routineName = routineName.substring(7);
+                    }
+                    if(routineName.startsWith("class_initialisation"))
+                    {
+                        routineName = classToAdd.name;
+                        routineIcon = vscode.SymbolKind.Constructor;
+                        global = "Constructor";
+                    }
+
+                    let symbol = new vscode.DocumentSymbol(
+                        routineName, 
+                        global,
+                        routineIcon,
+                        range,
+                        range
+                        );
+                        
+                    let paramString = matches.groups.parameters;
+                    
+                    if(paramString)
+                    {
+                        let variables = paramString.replace("(", "").replace(")", "").replace(/value/gi, "").split(",");
+
+                        while(variables.length > 0)
+                        {
+                            let variable = variables.pop().trim();
+                            console.log(`\tFound Parameter ${variable}`);
+
+                            let parameter = new vscode.DocumentSymbol(
+                                variable.toLocaleLowerCase(), 
+                                "",
+                                vscode.SymbolKind.Key,
+                                range,
+                                range
+                                );
+
+                            symbol.children.push(parameter);
+                        }
+                    }
+
+                    if(classToAdd)
+                    {
+                        classToAdd.children.push(symbol);
+                    } else {                                           
+                        this.symbols.push(symbol);
+                    }
+                }
+            }
+                
+        } catch (error) {
+
+            console.timeLog("reportParsing", `***\tERROR ${error}`);
+
+        } finally {
+
+            console.timeEnd("reportParsing");
+
+        }
+
+        classes.forEach(c => {
+            this.symbols.push(c);
+        });
     }
 }

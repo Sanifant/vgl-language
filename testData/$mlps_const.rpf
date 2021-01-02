@@ -23,3 +23,7 @@ GLOBAL CONSTANT MLP_CONST_COMPARE       = "C"
 
 GLOBAL CONSTANT MLP_CONST_NULL_ANALYSIS = "$NULL"
 
+routine test
+
+endroutine
+

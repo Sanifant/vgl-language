@@ -1,49 +1,79 @@
 {
-	"name": "vgl-language",
-	"displayName": "VGL Language",
+	"name": "samplemanager-tools",
+	"displayName": "SampleManager extension",
 	"description": "SampleManager support extension",
-	"version": "0.0.4",
+	"version": "0.0.3",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
+	"homepage": "https://github.com/Sanifant/vgl-language/blob/master/README.md",
+	"bugs": {
+		"url": "https://github.com/Sanifant/vgl-language/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Sanifant/vgl-language"
+	},
+	"icon": "media/icon.png",
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
 	},
 	"engines": {
 		"vscode": "^1.52.0"
 	},
 	"categories": [
-		"Other"
+		"Formatters",
+		"Programming Languages"
+	],
+	"keywords": [
+		"vgl",
+		"structure",
+		"samplemanager",
+		"LIMS"
 	],
 	"activationEvents": [
-		"onLanguage:vgl-structure",
-		"onLanguage:vgl-report"
+		"onStartupFinished",
+		"onLanguage:sm-structure",
+		"onLanguage:vgl-language"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"languages": [
 			{
-				"id": "vgl-structure",
+				"id": "sm-structure",
 				"aliases": [
 					"Structure.txt"
 				],
 				"filenamePatterns": [
-					"structure.txt",
-					"structure.*.txt",
-					"*.structure.txt",
-					"structure.txt.*"
+					"structure.txt"
 				]
 			},
 			{
-				"id": "vgl-report",
+				"id": "vgl-language",
 				"aliases": [
-					"VGL Report"
+					"VGL Report",
+					"VGL"
 				],
 				"filenamePatterns": [
 					"*.rpf",
 					"*.sxf",
 					"*.caf"
 				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "vgl-language",
+				"scopeName": "source.vgl-language",
+				"path": "./syntaxes/vgl-language.json"
+			},
+			{
+				"language": "sm-structure",
+				"scopeName": "source.sm-structure",
+				"path": "./syntaxes/sm-structure.json",
+				"embeddedLanguages": {
+					"markup.raw.sm-structure": "sql"
+				}
 			}
 		],
 		"viewsContainers": {
@@ -59,24 +89,33 @@
 			"sampleManager": [
 				{
 					"id": "reportOutline",
-					"name": "Report Outline",
-					"when": "reportOutlineEnabled"
+					"name": "Report Outline"
 				}
 			]
 		},
 		"configuration": {
-			"title": "vgl language",
+			"title": "SampleManager",
 			"properties": {
-				"vgl.Instance.Name": {
+				"sampleManager.Instance.Name": {
 					"type": "string",
-					"scope": "window",
+					"scope": "resource",
 					"default": "VGSM",
 					"description": "Name of the SampleManager Instance"
 				},
-				"vgl.Instance.Folder": {
+				"sampleManager.Instance.Folder": {
 					"type": "string",
-					"scope": "window",
+					"scope": "resource",
 					"description": "Folder of the SampleManager Instance"
+				},
+				"sampleManager.Installation.Folder": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Folder of the SampleManager Base Installation"
+				},
+				"sampleManager.Installation.Version": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Version of SampleManager being installed"
 				}
 			}
 		}

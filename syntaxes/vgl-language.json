@@ -77,7 +77,8 @@
                 { "include": "#keyword-control" },
                 { "include": "#keyword-operator" },
                 { "include": "#keyword-header" },
-                { "include": "#keyword-global" }
+                { "include": "#keyword-global" },
+                { "include": "#keyword-self"}
             ]
         },
         "keyword-builtin-function": {
@@ -114,6 +115,10 @@
         "keyword-global": {
             "name": "keyword.control.vgl-language",
             "match": "(?i)^global$"
+        },
+        "keyword-self": {
+            "name": "keyword.type.vgl-language",
+            "match": "(?i)self"
         }
     }
 }

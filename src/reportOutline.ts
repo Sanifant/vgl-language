@@ -9,6 +9,8 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     constructor() {
         this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_]+\s*,?)*\))?/gi;
         this.classPattern = /(define class)\s(?<className>[a-z_]*)/gi;
+        
+        console.time("reportParsing");
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -23,7 +25,6 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     }
 
     private parseDocument(document: vscode.TextDocument): void {
-        console.time("reportParsing");
         console.timeLog("reportParsing", "Parsing document");
         let regex = new RegExp(this.classPattern);
         let matches: RegExpExecArray;
@@ -52,15 +53,9 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
             }
                 
         } catch (error) {
-
             console.timeLog("reportParsing", `***\tERROR ${error}`);
-
-        } finally {
-
-            console.timeEnd("reportParsing");
-
         }
-
+        
         regex = new RegExp(this.routinePattern);
         try {
             while ((matches = regex.exec(document.getText())) !== null) {

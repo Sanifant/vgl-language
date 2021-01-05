@@ -27,6 +27,6 @@ jobs:
     - run: npm run compile
     - name: publish to marketplace
         env:
-          $marketplace-token: ${{ secrets.MARKETPLACE_TOKEN }}
-        run: vsce -publish -p $marketplace-token
+          $marketplace: ${{ secrets.MARKETPLACE_TOKEN }}
+        run: vsce -publish -p $marketplace
 

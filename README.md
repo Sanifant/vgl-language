@@ -28,7 +28,7 @@ Also the tables where shown in the outline box
 
 ## Requirements
 
-FOr the full functionality a SampleManager installation should ve available.
+For the full functionality a SampleManager installation should ve available.
 This extension set was only tested with versions higher than 12.1.
 
 ## Extension Settings

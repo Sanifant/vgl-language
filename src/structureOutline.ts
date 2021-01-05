@@ -2,12 +2,14 @@ import * as vscode from 'vscode';
 
 export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     
-    private routinePattern: RegExp;
+    private tablePattern: RegExp;
+    private viewPattern: RegExp;
     private symbols: vscode.DocumentSymbol[];
 
     constructor() {
         console.time("structure"); 
-        this.routinePattern = /(?<![a-z_])table\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
+        this.tablePattern = /(?<![a-z_])table\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
+        this.viewPattern = /(?<![a-z_])view\s+(?<viewName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -23,19 +25,38 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
     private parseDocument(document: vscode.TextDocument): void {
         console.timeLog("structure", "\tparsing document");
-        const regex = new RegExp(this.routinePattern);
+        let regex = new RegExp(this.tablePattern);
         let matches: RegExpExecArray;
         while ((matches = regex.exec(document.getText())) !== null) {
             let selectionStart = matches.index;
             let selectionEnd = regex.lastIndex;
-            let routineName = matches.groups.tableName.toLocaleLowerCase();
+            let tableName = matches.groups.tableName.toLocaleLowerCase();
             let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-            console.timeLog("structure", `\tFound Table ${routineName}`);
+            console.timeLog("structure", `\tFound Table ${tableName}`);
 
             let symbol = new vscode.DocumentSymbol(
-                    routineName, 
+                tableName, 
                     'Table',
+                    vscode.SymbolKind.Key,
+                    range,
+                    range
+                );            
+            
+            this.symbols.push(symbol);
+        }
+        regex = new RegExp(this.viewPattern);
+        while ((matches = regex.exec(document.getText())) !== null) {
+            let selectionStart = matches.index;
+            let selectionEnd = regex.lastIndex;
+            let viewName = matches.groups.viewName.toLocaleLowerCase();
+            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+
+            console.timeLog("structure", `\tFound view ${viewName}`);
+
+            let symbol = new vscode.DocumentSymbol(
+                viewName, 
+                    'View',
                     vscode.SymbolKind.Key,
                     range,
                     range

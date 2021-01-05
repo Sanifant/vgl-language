@@ -29,5 +29,5 @@ jobs:
     - name: publish to marketplace
       env:
         $marketplace: ${{ secrets.MARKETPLACE_TOKEN }}
-      run: vsce -publish -p $marketplace
+      run: vsce publish -p $marketplace
 

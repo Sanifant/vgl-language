@@ -40,6 +40,7 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
                 {
                     className = className.substr(0, className.length - 6);
                 }
+
                 if(className)
                 {
                     console.timeLog("reportParsing", `\tFound Class ${className} in line ${document.positionAt(selectionStart).line}`);

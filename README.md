@@ -1,5 +1,7 @@
 # SampleManager(R) development extension
 ![Node.js CI](https://github.com/Sanifant/vgl-language/workflows/Node.js%20CI/badge.svg?branch=development)
+![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/stefanpetersen.samplemanager-tools.svg)
+![Installs](https://vsmarketplacebadge.apphb.com/installs-short/stefanpetersen.samplemanager-tools.svg)
 
 This extension can be used to help you with SampleManager VGL deployment.
 

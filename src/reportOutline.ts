@@ -36,6 +36,11 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
                 let className = matches.groups.className.toLocaleLowerCase();
                 let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
+                if(className.endsWith("_class"))
+                {
+                    className = className.substr(0, className.length - 6);
+                }
+
                 if(className)
                 {
                     console.timeLog("reportParsing", `\tFound Class ${className} in line ${document.positionAt(selectionStart).line}`);

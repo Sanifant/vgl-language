@@ -8,7 +8,7 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
 
     constructor() {
         this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_]+\s*,?)*\))?/gi;
-        this.classPattern = /(define class)\s(?<className>[a-z_]*)/gi;
+        this.classPattern = /(define class)\s"?(?<className>[a-z_]*)"?/gi;
         
         console.time("reportParsing");
 	}
@@ -86,7 +86,12 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
                     
                     if(routineName.startsWith("action_"))
                     {
-                        routineName = routineName.substring(7);
+                        if(routineName.startsWith("action_class_"))
+                        {
+                            routineName = routineName.substring(13);
+                        } else {
+                            routineName = routineName.substring(7);
+                        }
                     }
                     if(routineName.startsWith("class_initialisation"))
                     {

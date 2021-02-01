@@ -9,7 +9,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     constructor() {
         console.time("structure"); 
         this.tablePattern = /(?<![a-z_])table\s+(?<tableName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
-        this.viewPattern = /(?<![a-z_])view\s+(?<viewName>[a-zA-Z_]+)\s*[a-zA-Z_\s\']*;/gi;
+        this.viewPattern = /(?<![a-z_])view\s+(?<viewName>[a-zA-Z_]+)\s*[a-zA-Z_\s\',]*;/gi;
 	}
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {

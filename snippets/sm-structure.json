@@ -1,0 +1,35 @@
+{"tbl": {
+    "prefix": "vgl-table",
+    "body": [
+      "{Custom table for ${3:description}} ",
+      "table  ${1:name};",
+      "   field ${2:identity};"
+    ]
+  },
+  "vw-sel": {
+    "prefix": "vgl-view-select",
+    "body": [
+      "view\t${1:name};",
+      "\t\tfield\t${2:identity};",
+      "${3|select_clause, sqlserver_specific_select\n\n\n;\n\n\noracle_specific_select|}",
+      "\n\n\n;"
+      
+    ]
+  },
+  "vw": {
+    "prefix": "vgl-view",
+    "body": [
+      "view\t${1:name};",
+      "\t\tfield\t${2:identity};"
+      
+    ]
+  },
+
+  "fld": {
+    "prefix": "vgl-field",
+    "body": [
+      
+      "   field ${1:identity};"
+    ]
+  }
+}

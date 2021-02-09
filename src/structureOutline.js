@@ -14,17 +14,24 @@ class StructureOutlineProvider {
     constructor() {
         console.time("structure");
 
+         //Regex for instance default entities
+       this.instance = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<GroupType>table_defaults|index_defaults)[\s]+(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
+        //Regext for instance attributes
+       this.instancettrib = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<GroupType>oracle_location|sqlserver_location|\bsqlserver_collation\b|sqlserver_collation_case_sensitive|sqlserver_use_nvarchar)\s*(?<Value>['\d_A-Za-z]+)[^\s;]/gi;
+
+        
         //globally parses the Structure.txt file.  Ignoring Comment lines and Blocks, then grouping major types, getting their name and sub attributes as a long string for later parsing.
         this.regexglobal = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<GroupType>sequence|table|field|view|collection|index|select_clause|oracle_specific_select|sqlserver_specific_select)[\s]+(?<Name>[_A-Za-z]+)(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
 
+        
                 //Field or table attribute regex syntaxes.
                 this.linksTo = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\blinks_to\s+(?<linkedTable>[a-zA-Z_]+)[\s.]+(?<linkedField>[a-zA-Z_]+)\b/gi;
                 this.alias = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\balias\s+(?<alias>[a-zA-Z_]+)\b/gi;
                 this.datatype = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)datatype\s*(?<datatype>[a-zA-Z_]+)/gi;
                 this.usedFor = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\bused_for\s+(?<usedforName>[a-zA-Z_]+)\b/gi;
-                this.linksToParentAlias = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)links_to\s+(parent)*\s*(?<linkedTable>[a-zA-Z_]+)[\s.]+\s(?<linkedField>[a-zA-Z_]+)\s+(as)\s+(?<aliasAs>[a-zA-Z_]+)[\n;]/gi;
-                this.linksToSimple = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)links_to\s+(?!parent)(?<linkedTable>[a-zA-Z_]+)[\s.]+(?<linkedField>[a-zA-Z_]+)\s*(?<!as)[\t\r\n;]/gi;
-    }
+                this.linksToParentAlias = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)links_to\s+(parent)*\s*(?<linkedTable>[a-zA-Z_]+)\s*[.]+\s*(?<linkedField>[a-zA-Z_]+)\s+(as)\s+(?<aliasAs>[a-zA-Z_]+)[^\s;\n]/gi;
+                this.linksToSimple = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)links_to\s+(?!\bparent\b)\s*(?<linkedTable>[a-zA-Z_]+)[\s.]+(?<linkedField>[a-zA-Z_]+)\s*(?!\bas\b)\s*[A-Za-z_]*[\n\t\r;]/gi;
+     }
     provideDocumentSymbols(document, token) {
         return new Promise((resolve, reject) => {
             this.symbols = [];

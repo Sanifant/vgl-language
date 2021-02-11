@@ -91,7 +91,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
 
                 if(groupType === 'field'){
-                    let fieldsymbol = new vscode.DocumentSymbol(name, groupType, vscode.SymbolKind.Field, range, range);
+                    let fieldsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Field, range, range);
                     scopedsymbol.children.push(fieldsymbol);
 
 
@@ -134,12 +134,12 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                 }
                 if(groupType === 'index')
                 {
-                    let indexsymbol = new vscode.DocumentSymbol(name, groupType, vscode.SymbolKind.Struct, range, range);
+                    let indexsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Struct, range, range);
                     scopedsymbol.children.push(indexsymbol);
                 }
                 if(groupType === 'collection')
                 {
-                    let collectsymbol = new vscode.DocumentSymbol(name, groupType, vscode.SymbolKind.Object, range, range);
+                    let collectsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Object, range, range);
                     scopedsymbol.children.push(collectsymbol);
 
                     //Work through different types of field attributes
@@ -193,7 +193,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
                 let name = matches.groups.Name.toLocaleLowerCase();
                 console.timeLog("structure", `\tFound: ${groupType} - ${name}`);   
-                scopedsymbol = new vscode.DocumentSymbol(name, groupType, vscode.SymbolKind.File, range, range);
+                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.File, range, range);
                 
 
             }
@@ -213,7 +213,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                 console.timeLog("structure", `\tFound: ${groupType} - ${name}`);      
 
                 console.timeLog("structure", `\tStarting New symbol: ${groupType} - ${name}`);  
-                scopedsymbol = new vscode.DocumentSymbol(name, groupType, vscode.SymbolKind.Key, range, range);
+                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Key, range, range);
                 
                 tablescope = true;
 

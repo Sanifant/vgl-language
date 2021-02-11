@@ -78,13 +78,10 @@
 				}
 			}
 		],
-		
-				"snippets": [
-
+		"snippets": [
 			{
 				"language": "sql",
 				"path": "./snippets/sql.json"
-				
 			},
 			{
 				"language": "vgl-language",
@@ -94,7 +91,6 @@
 				"language": "sm-structure",
 				"path": "./snippets/sm-structure.json"
 			}
-
 		],
 		"viewsContainers": {
 			"activitybar": [

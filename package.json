@@ -2,7 +2,7 @@
 	"name": "samplemanager-tools",
 	"displayName": "SampleManager extension",
 	"description": "SampleManager support extension",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
 	"homepage": "https://github.com/Sanifant/vgl-language/blob/master/README.md",
@@ -76,6 +76,20 @@
 				"embeddedLanguages": {
 					"markup.raw.sm-structure": "sql"
 				}
+			}
+		],
+		"snippets": [
+			{
+				"language": "sql",
+				"path": "./snippets/sql.json"
+			},
+			{
+				"language": "vgl-language",
+				"path": "./snippets/vgl-language.json"
+			},
+			{
+				"language": "sm-structure",
+				"path": "./snippets/sm-structure.json"
 			}
 		],
 		"viewsContainers": {

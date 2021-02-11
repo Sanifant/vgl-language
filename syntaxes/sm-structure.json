@@ -5,7 +5,8 @@
     "patterns": [
         { "include": "#keyword" },
         { "include": "#comment" },
-        { "include": "#literal" }
+        { "include": "#literal" },
+        { "include": "#fenced-code-block"}
     ],
 
     "repository": {
@@ -47,7 +48,7 @@
             ]
         },
         "fenced-code-block-sql": {
-            "name": "markup.raw.vgl-structure",
+            "name": "markup.raw.sm-structure",
             "begin": "(?i)\\b(select_clause|(oracle|sqlserver|rdb)_specific_select)\\b",
             "end": ";",
             "beginCaptures": {

@@ -74,7 +74,7 @@
 				"scopeName": "source.sm-structure",
 				"path": "./syntaxes/sm-structure.json",
 				"embeddedLanguages": {
-					"markup.raw.sm-structure": "sql"
+					"meta.embedded.block.sql": "sql"
 				}
 			}
 		],

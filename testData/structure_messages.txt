@@ -1,0 +1,15 @@
+! Messages for prompt descriptions for tables and fields should go in here
+
+MESSAGE GROUP = "STRUCTURE_SAMPLE"
+
+MESSAGE       = ""
+TEXT          = "Sample"
+
+MESSAGE       = "_ID_NUMERIC"
+TEXT          = "ID Numeric"
+
+MESSAGE       = "_ID_TEXT"
+TEXT          = "ID Text"
+
+MESSAGE       = "_JOB_NAME"
+TEXT          = "Job Name"

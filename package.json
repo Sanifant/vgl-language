@@ -49,6 +49,15 @@
 				]
 			},
 			{
+				"id": "sm-messages",
+				"aliases": [
+					"messages.txt"
+				],
+				"filenamePatterns": [
+					"*_messages.txt"
+				]
+			},
+			{
 				"id": "vgl-language",
 				"aliases": [
 					"VGL Report",
@@ -76,6 +85,11 @@
 				"embeddedLanguages": {
 					"meta.embedded.block.sql": "sql"
 				}
+			},
+			{
+				"language": "sm-messages",
+				"scopeName": "source.sm-messages",
+				"path": "./syntaxes/sm-messages.json"
 			}
 		],
 		"snippets": [

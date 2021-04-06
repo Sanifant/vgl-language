@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { MessageOutlineProvider } from './messageOutline';
 import { ReportOutlineProvider } from './reportOutline';
 import { StructureOutlineProvider } from './structureOutline';
 
@@ -18,6 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentSymbolProvider(
             {scheme: "file", language: "sm-structure"}, 
             new StructureOutlineProvider())
+    );
+
+    context.subscriptions.push(
+        vscode.languages.registerDocumentSymbolProvider(
+            {scheme: "file", language: "sm-messages"},
+            new MessageOutlineProvider()
+        )
     );
 }
 

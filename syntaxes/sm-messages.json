@@ -1,0 +1,40 @@
+{
+    "scopeName": "source.sm-messages",
+    "fileTypes": [ ],
+    "name": "sm-messages",
+    "patterns": [
+        { "include": "#keyword" },
+        { "include": "#comment" },
+        { "include": "#literal" }
+    ],
+
+    "repository": {
+        "keyword": {
+            "patterns": [
+                { "include": "#keyword-configuration"}
+            ]
+        },
+        "keyword-configuration": {
+            "name": "storage.config.sm-structure",
+            "match": "(?i)\\b(MESSAGE GROUP|MESSAGE|TEXT)\\b"
+        },
+
+        "literal": {
+            "patterns": [
+                { "include": "#literal-string" }
+            ]
+        },
+        "literal-string": {
+            "name": "string.quoted.single.sm-structure",
+            "match": "\"[^']*\""
+        },
+
+        "comment": {
+            "patterns": [{ "include": "#comment-block" }]
+        },
+        "comment-block": {
+            "name": "comment.block.sm-structure",
+            "match": "![^']*"
+        }
+    }
+}

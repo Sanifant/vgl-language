@@ -37,7 +37,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
         this.viewPattern = /(?<![a-z_])view\s+(?<viewName>[a-zA-Z_]+)\s*[a-zA-Z_\s\',]*;/gi;
 
         //Regex for instance default entities
-        this.instance = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<groupType>table_defaults|index_defaults)[\s]+(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
+       this.instance = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<groupType>table_defaults|index_defaults)[\s]+(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
         //Regext for instance attributes
        this.instancettrib = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<groupType>oracle_location|sqlserver_location|\bsqlserver_collation\b|sqlserver_collation_case_sensitive|sqlserver_use_nvarchar)\s*(?<Value>['\d_A-Za-z]+)[^\s;]/gi;
 
@@ -46,7 +46,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
                 //Field or table attribute regex syntaxes.
                 this.collectAttrib = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\bon\b\s+(?<collectTable>[a-zA-Z_]+)\s+(\busing\b)\s+(?<collectField>[a-zA-Z_]+)[^\s\n]/gi;
-                this.linksTo = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<linkType>\blinks_to\b|\blinks_to parent\b)\s+(?<linkedTable>[a-zA-Z_]+)\s[.]\s(?<linkedField>[a-zA-Z_]+)/gi;
+                this.linksTo = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<linkType>\blinks_to\b|\blinks_to parent\b)\s+(?<linkedTable>[a-zA-Z_]+)\s*[.]\s*(?<linkedField>[a-zA-Z_]+)/gi;
                 this.alias = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\balias\s+(?<alias>[a-zA-Z_]+)\b/gi;
                 this.datatype = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)datatype\s*(?<datatype>[a-zA-Z_]+)/gi;
                 this.usedFor = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\bused_for\s+(?<usedforName>[a-zA-Z_]+)\b/gi;
@@ -124,7 +124,7 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
                         let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-                        let attribsymbol = new vscode.DocumentSymbol(attribute, attribmatches.groups.linkType.toLocaleLowerCase(), vscode.SymbolKind.Interface, range, range);
+                        let attribsymbol = new vscode.DocumentSymbol(attribute, attribmatches.groups.linkType.toLocaleLowerCase().capitalize(), vscode.SymbolKind.Interface, range, range);
                         fieldsymbol.children.push(attribsymbol);
                         
                     }

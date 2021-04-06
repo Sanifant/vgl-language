@@ -2,7 +2,7 @@
 	"name": "samplemanager-tools",
 	"displayName": "SampleManager extension",
 	"description": "SampleManager support extension",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"publisher": "stefanpetersen",
 	"license": "MIT",
 	"homepage": "https://github.com/Sanifant/vgl-language/blob/master/README.md",

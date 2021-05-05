@@ -24,7 +24,7 @@
         },
         "keyword-statement": {
             "name": "storage.type.sm-structure",
-            "match": "(?i)\\b(index|view|table|field|collection|sequence)\\b"
+            "match": "(?i)\\b(index|view|table|field|collection|sequence|language)\\b"
         },
         "keyword-datatype": {
             "name": "datatype.type.sm-structure",

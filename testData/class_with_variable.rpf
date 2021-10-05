@@ -1,0 +1,3127 @@
+{==============================================================================}
+{ Project............:                                                         }
+{ Module Name........: nwa_update_setup.rpf                                    }
+{ Company............: (C)  2021                                               }
+{ Author.............: s.petersen                                              }
+{ Responsible........: s.petersen                                              }
+{ System.............:                                                         }
+{ Portability........: Not Checked                                             }
+{ Document Ref.......:                                                         }
+{ Specification......:                                                         }
+{ Re-entrant.........:                                                         }
+{ Status.............: [X] In Work  [ ] Test  [ ] Ready for use  [ ] Released  }
+{------------------------------------------------------------------------------}
+{ Created on.........: 05/10/2021                                              }
+{ Created by.........: s.petersen                                              }
+{ Last modified on...: 05/10/2021                                              }
+{ Last modified by...: s.petersen                                              }
+{ Version............: 1.0.0.1                                                 }
+{ Release date.......:                                                         }
+{------------------------------------------------------------------------------}
+{ Messagefiles.......:                                                         }
+{ Libraries..........: see JOIN-Statements                                     }
+{------------------------------------------------------------------------------}
+{ Purpose, Comments..:                                                         }
+{------------------------------------------------------------------------------}
+{ History                                                                      }
+{ 05/10/2021 (SP)....: Start                                                   }
+{==============================================================================}
+
+
+{==============================================================================}
+{                            P R E P A R A T I O N                             }
+{==============================================================================}
+SET COMPILE_OPTION DECLARE
+ENABLE WINDOWS
+SET NAME "DEFER/"
+SET NOTPROTECTED
+
+
+{==============================================================================}
+{                          L I B R A R Y   J O I N S                           }
+{==============================================================================}
+JOIN STANDARD_LIBRARY STD_ARRAY
+JOIN STANDARD_LIBRARY STD_ARRAY_SELECT
+JOIN STANDARD_LIBRARY STD_CLASS
+JOIN LIBRARY          LSD_FILELIB1
+JOIN LIBRARY          LSD_GCONSTANTS1
+JOIN LIBRARY          LSD_GENERALLIB1
+JOIN LIBRARY          LSD_MATHELIB1
+JOIN LIBRARY          LSD_SETUP_UPD_BASE1
+JOIN LIBRARY          LSD_STRINGLIB1
+JOIN LIBRARY          LSD_UTILLIB1
+
+
+{==============================================================================}
+{                                G L O B A L S                                 }
+{==============================================================================}
+GLOBAL CONSTANT CUSTOM_SETUP_UPDATE_STEPS    = "NWAUPDATESETUP"    { Classname }
+
+
+
+{------------------------------------------------------------------------------}
+{ Calls mainroutine for "interactive" mode is not possible                     }
+{------------------------------------------------------------------------------}
+    ShowMessage("This library must be called from the LSD_TOOLS-Wizard")
+    Exit
+{------------------------------------------------------------------------------}
+
+
+
+{==============================================================================}
+{     * * * * * * *     C L A S S - D E F I N I T I O N     * * * * * * *      }
+{==============================================================================}
+
+{==============================================================================}
+{ Classdefinition for class CUSTOM_SETUP_UPDATE_STEPS                          }
+{------------------------------------------------------------------------------}
+{ Attributes: - = use as PRIVATE   (only for this class)                       }
+{             # = use as PROTECTED (for this class and friends)                }
+{             + = use as PUBLIC    (for all)                                   }
+{==============================================================================}
+{   Name                  Type            Comment                              }
+{------------------------------------------------------------------------------}
+{=[05/10/2021 (SP)]============================================================}
+GLOBAL ROUTINE Define_Class_nwa_update_setup
+
+   Define_Class_lsd_setup_update_base()
+
+   DEFINE CLASS CUSTOM_SETUP_UPDATE_STEPS
+      INHERIT LSD_SETUP_UPDATE_BASE
+      INITIALISATION
+      PROPERTIES
+         "defaultStructGUIDs",
+         "defaultWIZ_ExplorerCabinetExpExplorer",
+         "defaultWIZ_ExplorerCabinetWizardActive",
+         "defaultWIZ_ExplorerCabinetShowEPW",
+         "defaultWIZ_ExplorerCabinetExpMasterMenu",
+         "defaultWIZ_ExplorerCabinetExpMenuToolbar",
+         "defaultWIZ_ExplorerCabinetExpRoleEntry",
+         "defaultWIZ_ExplorerCabinetRoleEntryRoleIDs",
+         "defaultWIZ_ExplorerCabinetExpMenuToolbarSF",
+         "defaultWIZ_ExplorerCabinetExpMenuToolbarTBN",
+         "mainRootPath",
+         "rc01RootPath",
+         "rc02RootPath"
+      ACTIONS
+         "ChangeRootPath",
+         "AfterUpdateActiveOptions",
+         "PrepareActiveOptionArray",
+         "PrepareMessageSubFolderArray",
+         "ExportMessageFilesRC_01",
+         "ExportMessageFilesRC_02",
+         "ExportMessageFilesRC",
+         "ExportMessageFiles",
+         "ExportExeAndCfgFilesRC_01",
+         "ExportExeAndCfgFilesRC_02",
+         "ExportExeAndCfgFilesRC",
+         "ExportExeAndCfgFiles",
+         "ExportResourceFilesRC_01",
+         "ExportResourceFilesRC_02",
+         "ExportResourceFilesRC",
+         "ExportResourceFiles",
+         "ExportImprintFilesRC_01",
+         "ExportImprintFilesRC_02",
+         "ExportImprintFilesRC",
+         "ExportImprintFiles",
+         "ExportLabelFilesRC_02",
+         "ExportLabelFilesRC_01",
+         "ExportLabelFilesRC",
+         "ExportLabelFiles",
+         "ExportReportTemplateFilesRC_02",
+         "ExportReportTemplateFilesRC_01",
+         "ExportReportTemplateFilesRC",
+         "ExportReportTemplateFiles",
+         "ExportFormsRC_02",
+         "ExportFormsRC_01",
+         "ExportFormsRC",
+         "ExportForms",
+         "CopySolutionAssembliesRC_02",
+         "CopySolutionAssembliesRC_01",
+         "CopySolutionAssembliesRC",
+         "CopySolutionAssemblies",
+         "Export_CAF_FilesRC_02",
+         "Export_CAF_FilesRC_01",
+         "Export_CAF_FilesRC",
+         "Export_CAF_Files",
+         "Export_LAF_FilesRC_02",
+         "Export_LAF_FilesRC_01",
+         "Export_LAF_FilesRC",
+         "Export_LAF_Files",
+         "Export_SXF_FilesRC_02",
+         "Export_SXF_FilesRC_01",
+         "Export_SXF_FilesRC",
+         "Export_SXF_Files",
+         "Export_SFF_FilesRC_02",
+         "Export_SFF_FilesRC_01",
+         "Export_SFF_FilesRC",
+         "Export_SFF_Files",
+         "Export_RPF_FilesRC_02",
+         "Export_RPF_FilesRC_01",
+         "Export_RPF_FilesRC",
+         "Export_RPF_Files",
+         "ExportVGLMain",
+         "AddReminderForManualActions",
+         "OtherActionsRC_02",
+         "OtherActionsRC_01",
+         "OtherActionsRC",
+         "OtherActions",
+         "OtherActionsCommon",
+         "RepairFromUnderConstructionRC_02",
+         "RepairFromUnderConstructionRC_01",
+         "RepairFromUnderConstructionRC",
+         "RepairFromUnderConstruction",
+         "ExportPhrasesRC_02",
+         "ExportPhrasesRC_01",
+         "ExportPhrasesRC",
+         "ExportPhrases",
+         "ExportCriteriaRC_02",
+         "ExportCriteriaRC_01",
+         "ExportCriteriaRC",
+         "ExportCriteria",
+         "ExportInterfacesRC_02",
+         "ExportInterfacesRC_01",
+         "ExportInterfacesRC",
+         "ExportInterfaces",
+         "ExportCSVFilesRC_02",
+         "ExportCSVFilesRC_01",
+         "ExportCSVFilesRC",
+         "ExportCSVFiles",
+         "ExportWorkflowFilesRC_02",
+         "ExportWorkflowFilesRC_01",
+         "ExportWorkflowFilesRC",
+         "ExportWorkflowFiles",
+         "CopyAnyFilesRC_02",
+         "CopyAnyFilesRC_01",
+         "CopyAnyFilesRC",
+         "CopyAnyFiles"
+   END CLASS {<- DEFINE CLASS CUSTOM_SETUP_UPDATE_STEPS }
+
+ENDROUTINE
+
+
+{------------------------------------------------------------------------------}
+{ Initialisationroutine for CUSTOM_SETUP_UPDATE_STEPS                          }
+{-[05/10/2021 (SP)]------------------------------------------------------------}
+ROUTINE nwa_update_setup_Class_Initialisation(self)
+
+   {---------------------------------------------------------------------------}
+
+   self.CUSTOM_SETUP_ROOT_FOLDER                   = Set_LastServerPathChar(GetGlobal(LSD_TOOLS_CUST_SETUP_ROOT_FLDR, "C:\Thermo\SampleManager\Server\VGSM\_SETUP_\Setup_NWA"))
+   self.updateSetupVGLFileName                     = GLOBAL("CURRENT_LIBRARY")
+
+   {---------------------------------------------------------------------------}
+
+   self.ACTIVE_OPTION_ExportMessageFiles           = TRUE
+   self.ACTIVE_OPTION_ExportExeAndCfgFiles         = TRUE
+   self.ACTIVE_OPTION_ExportResourceFiles          = TRUE
+   self.ACTIVE_OPTION_ExportReportTemplates        = TRUE
+   self.ACTIVE_OPTION_ExportLabels                 = TRUE
+   self.ACVITE_OPTION_ExportImprint                = TRUE
+   self.ACTIVE_OPTION_ExportCSVFiles               = TRUE
+   self.ACTIVE_OPTION_ExportWorkflowFiles          = TRUE
+   self.ACTIVE_OPTION_ExportPhrasesMain            = TRUE
+   self.ACTIVE_OPTION_ExportCriteriaMain           = TRUE
+   self.ACTIVE_OPTION_ExportInterface              = TRUE
+   self.ACTIVE_OPTION_OtherActions                 = TRUE
+   self.ACTIVE_OPTION_RepairFromUnderConstruction  = FALSE
+   self.ACTIVE_OPTION_AddReminderForManualActions  = TRUE
+   self.ACTIVE_OPTION_ExportCABFiles               = FALSE
+   self.ACTIVE_OPTION_ExportCABFilesSolCust        = FALSE
+   self.ACTIVE_OPTION_AutoRunUpdateBatch           = FALSE  { Legacy }
+   self.ACTIVE_OPTION_ExportVGLFiles               = TRUE
+   self.ACTIVE_OPTION_CopyFiles                    = TRUE
+   self.ACTIVE_OPTION_ExportForms                  = TRUE
+   self.ACTIVE_OPTION_CopyAnyFiles                 = TRUE
+   self.CURRENT_ACTIVE_ReleaseCandidate            = 0
+   {-----------------------------------------------}
+   self.ACTIVE_OPTION_SendEMail                    = FALSE
+   self.emailRecipients                            = ""
+   self.emailSubject                               = ""
+   self.emailUseMAPI                               = TRUE
+   self.emailMAPIType                              = 3 { 0 = mmtStandard, 1 = mmtWinsoft, 2 = mmtWinsoftSession, 3 = mmtRAPSimple, 4 = mmtRAPExtended, 5 = mmtRAPExtImpersonate }
+   self.emailRunOnClient                           = TRUE
+   self.emailSender                                = Get_Global(LSD_SMTP_SENDER_NAME, "")
+   self.emailOneMailPerAttachment                  = TRUE
+   self.emailAllowServerSide                       = FALSE    { If TRUE allow sending emails if client is started on the server }
+   self.emailAllowedOperators                      = ""       { If "" all operators can send mails, otherwise only the ones listed in this string (comma separated) }
+   {-----------------------------------------------}
+   self.ACTIVE_OPTION_CreateZIPFile                = TRUE    { If TRUE create a final zip file of the setup package for delivery }
+   self.ACTIVE_OPTION_DoubleZIP                    = FALSE   { If TRUE pack the first ZIP (with password) into a second ZIP file (some mail server remove password protected zip files) }
+   self.ACTIVE_OPTION_ZIPTo7z                      = FALSE   { If TRUE and ACTIVE_OPTION_DoubleZIP is TRUE create a 7z envelope file, otherwise a zip envelope file will be created }
+   self.delZipIf7z                                 = TRUE    { If TRUE and the 7z option is active the original zip will will be deleted if 7z file has been created. }
+   self.delZipIfEnvelope                           = TRUE    { If TRUE and the envelope file is in zip format the original zip file will be deleted if the envelop file exists }
+   self.maxSize7z                                  = 0
+   self.maxSizeUnit7z                              = "m"
+   self.typeOf7z                                   = "zip"   { could be 7z or zip }
+   self.password7z                                 = "" {self.ZIPPassword}
+   self.envelopeFirst7zVol                         = FALSE   { Could be set to TRUE if the mail server does not allow 7z.001 files and maxSize7z is > 0 }
+   self.envelopeAll7zVol                           = FALSE   { Could be set to true if mail server doesn't allow 7z. volumes at all }
+   self.envelope7z                                 = FALSE   { Could be set to true if mail server doesn't allow 7z at all }
+   self.envelopeZipUsePassword                     = TRUE    { If true use the same password for the envelope zip as for the main zip file }
+   self.reducedZipOutputLog                        = TRUE
+   self.maxSizeUnitZIP                             = "M"     { could be B, K or M }
+   self.maxSizeZIP                                 = 0       { > 0 means create multi volume zip file with M42ZipSplitter }
+   self.delZipIfMultiVolumeZip                     = TRUE    { If TRUE delete the master ZIP file after creating the multi volume file }
+   self.multiVolumeZipFileAddOn                    = "_MV"
+   self.openServerZipFolder                        = FALSE   { If TRUE open server side (!) the ZIP folder after the zip file has been created }
+   {-----------------------------------------------}
+   self.CheckCSVFilesForErrors                     = FALSE   { If you expect CSV files with errors (line breaks) activate this option                                      }
+   self.CheckCSVFilesAskBeforeRepair               = FALSE   { If you want to be ask before repairing a table activate this option (only if CheckCSVFilesForErrors = TRUE) }
+   self.CheckCSVFilesFixForLineBreak               = " "     { Define the replacement string to be used if a line break will be fixed                                      }
+   self.CheckCSVFilesTableNames                    = ""      { Comma separated list of table names to check (if CheckCSVFilesForErrors = TRUE). "" means check all files   }
+
+   {---------------------------------------------------------------------------}
+
+   self.defaultWIZ_ExplorerCabinetWizardActive        = FALSE  { See below }
+   self.defaultWIZ_ExplorerCabinetExpExplorer         = TRUE   { See below }
+   self.defaultWIZ_ExplorerCabinetShowEPW             = TRUE   { See below }
+   self.defaultWIZ_ExplorerCabinetExpMasterMenu       = TRUE   { See below }
+   self.defaultWIZ_ExplorerCabinetExpMenuToolbar      = TRUE   { See below }
+   self.defaultWIZ_ExplorerCabinetExpRoleEntry        = TRUE   { See below }
+   self.defaultWIZ_ExplorerCabinetRoleEntryRoleIDs    = "*"    { See below }
+   self.defaultWIZ_ExplorerCabinetExpMenuToolbarSF    = FALSE  { see below }
+   self.defaultWIZ_ExplorerCabinetExpMenuToolbarTBN   = ""     { see below }
+   self.defaultStructGUIDs                            = ""     { See below }
+
+   self.WIZ_ExplorerCabinetWizardActive               = self.defaultWIZ_ExplorerCabinetWizardActive       { If TRUE run the explorer cabinet export wizard, See also OtherActions methods                    }
+   self.WIZ_ExplorerCabinetExpExplorer                = self.defaultWIZ_ExplorerCabinetExpExplorer        { If TRUE export the explorer related tables                                                                               }
+   self.WIZ_ExplorerCabinetShowEPW                    = self.defaultWIZ_ExplorerCabinetShowEPW            { If TRUE shows the wizard form to change the default settings, See also OtherActions methods      }
+   self.WIZ_ExplorerCabinetExpMasterMenu              = self.defaultWIZ_ExplorerCabinetExpMasterMenu      { Default for Export Master Menu option, See also OtherActions methods                             }
+   self.WIZ_ExplorerCabinetExpMenuToolbar             = self.defaultWIZ_ExplorerCabinetExpMenuToolbar     { Default for Export Menu Toolbar option, See also OtherActions methods                            }
+   self.WIZ_ExplorerCabinetExpRoleEntry               = self.defaultWIZ_ExplorerCabinetExpRoleEntry       { Default for Export Role Entry option, See also OtherActions methods                              }
+   self.WIZ_ExplorerCabinetRoleEntryRoleIDs           = self.defaultWIZ_ExplorerCabinetRoleEntryRoleIDs   { Comma separated list of role ids. If "" full table will be exported. If "*" only roles from cabinet(s) will be exported) }
+   self.WIZ_ExplorerCabinetExpMenuToolbarSingleFiles  = self.defaultWIZ_ExplorerCabinetExpMenuToolbarSF   { If true create a spearate CSV file for every toolbar that is exported                                                    }
+   self.WIZ_ExplorerCabinetExpMenuToolbarTBNames      = self.defaultWIZ_ExplorerCabinetExpMenuToolbarTBN  { Comma separated list of toolbar names to export. % is supported. "" means all.                                           }
+   self.structGUIDs                                   = self.defaultStructGUIDs                           { Comma separated list of GUIDs to extract sections from structure, See also OtherActions methods  }
+
+   {---------------------------------------------------------------------------}
+
+   self.cleanAssemblyFolderBeforeCopy              = TRUE
+   self.cleanFormFolderBeforeCopy                  = TRUE
+   self.cleanLabelolderBeforeCopy                  = TRUE
+   self.cleanReportTemplateFolderBeforeCopy        = TRUE
+   self.cleanImprintFolderBeforeCopy               = TRUE
+   self.cleanVGLRelatedFoldersBeforeCopy           = TRUE { RPF, CAF, LAF, SXF, SFF }
+   self.cleanExplorerFolderBeforeCopy              = TRUE
+   self.cleanMSGFolderBeforeCopy                   = TRUE
+   self.cleanMSGSubFoldersToo                      = TRUE { Set to TRUE to delete sub folders (e.g. translations), too }
+   self.cleanCSVFolderBeforeStartExport            = TRUE { delete all CSV files prefixed with generalCSVFilePrefix from the csv folder }
+
+   self.showInitialParamDialog                     = TRUE
+   self.epwShowModPrompts                          = FALSE
+   self.epwShowRCPrompt                            = TRUE
+   self.showPreDataLog                             = TRUE
+   self.showPostDataLog                            = FALSE
+   self.showLogfile                                = TRUE
+   self.showWarnIfRepairedUnderConstruct           = TRUE
+   self.deleteCSVFilesWithZeroItems                = TRUE
+   self.useAlwaysABatchToCopyFiles                 = (SMVersion() < SM_VERSION_12) { Set to TRUE if COPY FILE does not work properly }
+   self.exportCSVAddRemoveToChild                  = TRUE  { Only for special CSV export methods. Try to add the linked remove field to the child table, too }
+   self.exportAllHierarchyForTableDetails          = TRUE  { If true export all hierarchy entries for the tables, otherwise only those that are used in the explorer folder (IMPORT_TABLE_DETAILS) }
+   self.resourceFileCheckResourceFirst             = TRUE  { If true check for *.resource files in <sm_root>Resource\Localization first, otherwise check in <sm_root>localization\resources first }
+   self.resourceFileUseNewest                      = TRUE  { If true check the date of the resource files (if 2 found) and use the newest one }
+   self.savePrepData                               = TRUE  { If TRUE save the log file(s) and the update setup wizard program to a subfolder prep in the setup (only in the full setup folder) }
+   self.exportIgnoreLTEFields                      = TRUE  { If TRUE modified_on and modified_by fields will not be exported into the CSV files }
+   self.exportIgnoreLTEFields_GROUP                = TRUE  { If TRUE group security fields will not be exported into the CSV files }
+   self.exportIgnoreLTEFields_MODBY                = TRUE  { If TRUE modified by fields will not be exported into the CSV files }
+   self.exportIgnoreLTEFields_MODON                = FALSE { If TRUE modified on fields will not be exported into the CSV files }
+   self.autoUpdatePersonnelEntries                 = TRUE  { If TRUE fields linked to the PERSONNEL table will be set to a default user before exporting the data }
+
+   {---------------------------------------------------------------------------}
+
+   {
+   self.IZArcFileName                              = self.CUSTOM_SETUP_ROOT_FOLDER : "IZArc\IZARCC.exe"
+   self.SevenZipFileName                           = self.CUSTOM_SETUP_ROOT_FOLDER : "IZArc\7za.exe"
+   self.zipRootFolder                              = ""  { The folder to store the ZIP files in. If not set it's smp$root: }
+   self.winMergeSourceFolder                       = ""  {CUSTOM_SETUP_ROOT_FOLDER : "WinMerge\"}{ This could be set to a valid WinMerge folder to ensure that a copy of WinMerge is available in the setup }
+
+   self.projectShortCut                            = "NWA"
+   self.zipNamePrefix                              = "NWA"
+   self.generalCSVFilePrefix                       = self.projectShortCut : "_"
+   self.wfWorkflowSubfolder                        = self.projectShortCut : "\"
+   self.wfWorkflowSubfolderRC                      = self.projectShortCut : "\"
+
+   self.mainRootPath                               = self.CUSTOM_SETUP_ROOT_FOLDER : "_Setup_\"
+   self.rc01RootPath                               = self.CUSTOM_SETUP_ROOT_FOLDER : "_Setup_RC_01\"
+   self.rc02RootPath                               = self.CUSTOM_SETUP_ROOT_FOLDER : "_Setup_RC_02\"
+   self.setupRootPath                              = self.mainRootPath : "Setup_NWA\"
+   self.CSV_FILE_RC_MARKER                         = ""  { Legacy }
+
+   self.underConstructionPath                      = self.CUSTOM_SETUP_ROOT_FOLDER : "_UnderConstruction_\"
+   self.repairUnderConstructionSubFolderSRC        = SETUP_SUBFOLDER_LIST
+   self.repairUnderConstructionSubFolderDST        = SETUP_SUBFOLDER_REPAIR_DEFAULT_DEST
+
+   {---------------------------------------------------------------------------}
+
+   { see comment of DistributeFilesFromList
+   self.fileDistributionDefaultFolder = GetLogicalV3(SMP_ROOT, FALSE) : "_Setup_\"
+
+   self.AddToDistributeFileListV1("release_notes.txt", self.mainRootPath)
+   self.AddToDistributeFileListV1("release_notes.txt", self.rc01RootPath)
+   self.AddToDistributeFileListV1("release_notes.txt", self.rc02RootPath)
+
+   self.AddToDistributeFileListV1("xxx_full_setup.setup", self.mainRootPath)
+   self.AddToDistributeFileListV1("xxx_setup_RC_01.setup", self.rc01RootPath)
+   self.AddToDistributeFileListV1("xxx_setup_RC_02.setup", self.rc02RootPath)
+   }
+   {---------------------------------------------------------------------------}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class lsd_setup_update_base                                       }
+{ Prepare the subfolder array for the message files                            }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_PrepareMessageSubFolderArray(self)
+
+   self.lsd_setup_update_base::PrepareMessageSubFolderArray()
+
+   {
+   iFolder = size_of_array(self.msgFileSubFolders)
+
+   iFolder                         = iFolder + 1
+   self.msgFileSubFolders[iFolder] = "de\de-DE\"
+   }
+
+ENDROUTINE
+
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Helper to init the active option array                                       }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{ aoaArr             Array           The active option array                   }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_PrepareActiveOptionArray(self, aoaArr)
+
+   {DECLARE iOption                     { Integer option                        }
+
+   self.lsd_setup_update_base::PrepareActiveOptionArray(aoaArr)
+
+   { Example:
+
+   iOption = size_of_array(aoaArr)
+
+   Inc(iOption)
+   aoaArr[iOption, actOptArr_ColActive]      = self.ACTIVE_OPTION_Update_OOS_OOT
+   aoaArr[iOption, actOptArr_ColTitle]       = "Update OOS/OOT module"
+   aoaArr[iOption, actOptArr_ColPropName]    = "ACTIVE_OPTION_Update_OOS_OOT"
+   }
+
+ENDROUTINE { nwa_update_setup_action_PrepareActiveOptionArray }
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Change the setup root path and other necessary settings related to the       }
+{ current setup (e.g. release candidate)                                       }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{ rootIndex          Integer         The index of the release candidate.       }
+{                                    0 = Main                                  }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ChangeRootPath(self, VALUE rootIndex)
+
+   {
+   self.WIZ_ExplorerCabinetWizardActive  = FALSE
+   }
+
+   IF IsValue(rootIndex) THEN
+      IF (rootIndex = 0) THEN
+         self.setupRootPath = self.mainRootPath
+      ELSEIF (rootIndex = 1) THEN
+         self.setupRootPath = self.rc01RootPath
+      ELSEIF (rootIndex = 2) THEN
+         self.setupRootPath = self.rc02RootPath
+      ENDIF {<- IF (rootIndex = 1) THEN }
+   ELSE
+      self.setupRootPath = self.mainRootPath
+   ENDIF {<- IF IsValue(rootIndex) THEN }
+
+   self.lsd_setup_update_base::ChangeRootPath(rootIndex)
+
+ENDROUTINE { nwa_update_setup_action_ChangeRootPath }
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Could be overwritten in descendant class to update some options add          }
+{ additional command lines etc. before running the real update                 }
+{ Called after user dialog has been shown with the available options.          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_AfterUpdateActiveOptions(self)
+
+   {DECLARE iCmd                         Index for configuration array         }
+
+   {---------------------------------------------------------------------------}
+
+   self.AddFolderToZipFolderList(self.setupRootPath, "FULL", TRUE)
+   {self.AddFolderToZipFolderListV2(self.setupRootPath, "FULL", TRUE, self.emailRecipients  : ";other.user@customer.com")}
+
+   IF (self.CURRENT_ACTIVE_ReleaseCandidate = 1) THEN
+      self.AddFolderToZipFolderList(self.rc01RootPath, "RC01", TRUE)
+   ELSEIF (self.CURRENT_ACTIVE_ReleaseCandidate = 2) THEN
+      self.AddFolderToZipFolderList(self.rc02RootPath, "RC02", TRUE)
+   ENDIF {<- IF (self.CURRENT_ACTIVE_ReleaseCandidate = 1) THEN }
+
+   {---------------------------------------------------------------------------}
+
+   { Example for additional command lines (legacy for old versions):
+   iCmd = size_of_array(self.additionalCommandLines)
+
+   Inc(iCmd)
+   self.additionalCommandLines[iCmd, addCmdLineArr_ColBatchName]   = ChangeLogicalInFileName(self.setupRootPath : "update_full_setup_files.bat")
+   self.additionalCommandLines[iCmd, addCmdLineArr_ColLogFileName] = ChangeFileExt(self.additionalCommandLines[iCmd, addCmdLineArr_ColBatchName], ".log")
+   self.additionalCommandLines[iCmd, addCmdLineArr_ColAddParam]    = ""
+   }
+
+   {---------------------------------------------------------------------------}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export csv files fpr release candidate.                            }
+{ For more details see ExportCSVFiles                                          }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCSVFilesRC_02(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   {----------------------}
+   { WORKFLOW_ACTION_TYPE }
+   {----------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_LIKE, "IDENTITY", "BHC_%")
+   self.ExportCSVFile("WORKFLOW_ACTION_TYPE", "", "", selArr)
+   ***}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export csv files fpr release candidate.                            }
+{ For more details see ExportCSVFiles                                          }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCSVFilesRC_01(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   {----------------------}
+   { WORKFLOW_ACTION_TYPE }
+   {----------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_LIKE, "IDENTITY", "BHC_%")
+   self.ExportCSVFile("WORKFLOW_ACTION_TYPE", "", "", selArr)
+   ***}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export csv files fpr release candidate.                 }
+{ For more details see ExportCSVFiles                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCSVFilesRC(self)
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.lsd_setup_update_base::ExportCSVFilesRC()
+
+   self.StartRCMethod("ExportCSVFiles")
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export csv files.                                       }
+{                                                                              }
+{ For available export option always check the latest documentation or the     }
+{ latest version of lsd_setup_upd_base1.rpf.                                   }
+{- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - }
+{ Available methods                                                            }
+{    Common export methods                                                     }
+{       - Using select arrays                                                  }
+{         - ExportCSVFile                                                      }
+{         - ExportCSVFileV2                                                    }
+{         - ExportCSVFileV3                                                    }
+{         - ExportCSVFileV4                                                    }
+{       - Using key lists                                                      }
+{         - ExportSingleTable                                                  }
+{         - ExportSingleTableV2                                                }
+{         - ExportSingleTableV3                                                }
+{         - ExportSingleTableV4                                                }
+{         - ExportSingleTableFull                                              }
+{         - ExportSingleTableByName                                            }
+{         - ExportMasterDetailTable                                            }
+{         - ExportMasterDetailTableV2                                          }
+{         - ExportMasterDetailTableV3                                          }
+{    Special export methods                                                    }
+{       - MasterMenu items                                                     }
+{         - ExportMasterMenuItems                                              }
+{         - ExportMasterMenuItemsV2                                            }
+{         - ExportMasterMenuItemsV3                                            }
+{         - ExportMasterMenuItemsAll                                           }
+{         - ExportMenuToolbarTree                                              }
+{         - ExportMenuToolbarTreeV2                                            }
+{         - ExportMenuToolbarTreeV3                                            }
+{         - ExportMenuToolbar                                                  }
+{       - Version analysis                                                     }
+{         - ExportVersionedAnalysis                                            }
+{         - ExportVersionedAnalysisV2                                          }
+{         - ExportVersionedAnalysisV3                                          }
+{         - ExportVersionedAnalysisExt                                         }
+{         - ExportVersionedAnalysisExtV2                                       }
+{       - Workflow related                                                     }
+{         - ExportWorkflowState                                                }
+{         - ExportWorkflowStateV2                                              }
+{         - ExportWorkflowEventType                                            }
+{         - ExportWorkflowEventTypeV2                                          }
+{         - ExportWorkflowActionType                                           }
+{         - ExportWorkflowActionTypeV2                                         }
+{         Note: The wokflow export itself is handled in the                    }
+{               ExportWorkflowFiles(RC) method                                 }
+{       - Explorer related                                                     }
+{         - ExportExplorerAux                                                  }
+{         - ExportIcons                                                        }
+{         - ExportTableDetails                                                 }
+{         - ExportExplorerFull                                                 }
+{         Note: Explorer wizard is handled in OtherActions(RC) methods.        }
+{               Always use this wizard to export explorer cabinets, folders... }
+{       - Login/Template related                                               }
+{         - ExportEntityTemplatesV2                                            }
+{         - ExportEntityTemplates                                              }
+{         - ExportEntityTemplateFields                                         }
+{         - ExportTemplateFields                                               }
+{         - ExportIncidentTemplates                                            }
+{         - ExportTestSchedule                                                 }
+{       - SQC related                                                          }
+{         - ExportSQCTrend                                                     }
+{         - ExportSQC                                                          }
+{       - Inspection                                                           }
+{         - ExportInspection                                                   }
+{         - ExportInspectionV2                                                 }
+{       - TimerQueue                                                           }
+{         - ExportTimerQueueItems                                              }
+{         - ExportTimerQueueItemsV2                                            }
+{       - Phrases                                                              }
+{         - ExportPhrase                                                       }
+{         - ExportPhraseLike                                                   }
+{         - ExportPhraseLikeV2                                                 }
+{         - ExportPhrasePart                                                   }
+{         - ExportPhraseHeaderItems                                            }
+{         - ! Usually you will use the special phrase export methods !         }
+{       - Others                                                               }
+{         - ExportModularReports                                               }
+{         - ExportReportLayout                                                 }
+{         - ExportCalcFunctions                                                }
+{         - ExportConfigItemsAndSettings                                       }
+{         - ExportUserSettingsForOperator                                      }
+{         - ExportLocation                                                     }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCSVFiles(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::ExportCSVFiles()
+
+   {--------------------------------------------------}
+   { Add the user ids that are invalid for the export }
+   {--------------------------------------------------}
+   {
+   self.AddAllAsInvalidUserExcept("DEFAULT,SYSTEM") { Option 1: exclude all valid user }
+
+   { Option 2: Add all users
+   self.AddInvalidUser("USER1,USER2,USER3")       a) as comma separated list
+   self.AddInvalidUser("USER4")                   b) and/or as single user
+   self.AddInvalidUser("USER5")                      etc.
+   }
+
+
+   {----------------------}
+   { WORKFLOW_ACTION_TYPE }
+   {----------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_LIKE, "IDENTITY", "BHC_%")
+   self.ExportCSVFile("WORKFLOW_ACTION_TYPE", "", "", selArr)
+   ***}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export workflow csv files.                                         }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportWorkflowFilesRC_02(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   {-----------------------------------------}
+   { WORKFLOWS CURRENT RELEASE CANDIDATE (2) }
+   {-----------------------------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_PUSH, EMPTY, EMPTY)
+      array_select_add(selArr, ARRAY_SELECT_EQ, "NAME", "BHC Extended Request Lifecycle")
+      array_select_add(selArr, ARRAY_SELECT_OR, EMPTY, EMPTY)
+      array_select_add(selArr, ARRAY_SELECT_EQ, "NAME", "BHC Extended Result Lifecycle")
+   array_select_add(selArr, ARRAY_SELECT_POP, EMPTY, EMPTY)
+   array_select_add(selArr, ARRAY_SELECT_EQ, "REMOVEFLAG", FALSE)
+   array_select_add(selArr, ARRAY_SELECT_ORDER, "NAME", ARRAY_SELECT_ASCENDING)
+
+   self.ExportWorkflowAuto(selArr, "*TEMP*")
+   ***}
+   {self.ExportWorkflowAutoList("") { Comma separated list of workflow names }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export workflow csv files.                                         }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportWorkflowFilesRC_01(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   {-----------------------------------------}
+   { WORKFLOWS CURRENT RELEASE CANDIDATE (1) }
+   {-----------------------------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_PUSH, EMPTY, EMPTY)
+      array_select_add(selArr, ARRAY_SELECT_EQ, "NAME", "BHC Extended Request Lifecycle")
+      array_select_add(selArr, ARRAY_SELECT_OR, EMPTY, EMPTY)
+      array_select_add(selArr, ARRAY_SELECT_EQ, "NAME", "BHC Extended Result Lifecycle")
+   array_select_add(selArr, ARRAY_SELECT_POP, EMPTY, EMPTY)
+   array_select_add(selArr, ARRAY_SELECT_EQ, "REMOVEFLAG", FALSE)
+   array_select_add(selArr, ARRAY_SELECT_ORDER, "NAME", ARRAY_SELECT_ASCENDING)
+
+   self.ExportWorkflowAuto(selArr, "*TEMP*")
+   ***}
+   {self.ExportWorkflowAutoList("") { Comma separated list of workflow names }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export workflow csv files - Release Candidate.          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportWorkflowFilesRC(self)
+
+   {-------------------------------------}
+   { WORKFLOWS CURRENT RELEASE CANDIDATE }
+   {-------------------------------------}
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.wfWorkflowSubfolder = self.wfWorkflowSubfolderRC
+   self.lsd_setup_update_base::ExportWorkflowFilesRC()
+
+   self.StartRCMethod("ExportWorkflowFiles")
+
+ENDROUTINE
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export workflow csv files.                              }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportWorkflowFiles(self)
+
+   DECLARE selArr                      { For select-array                      }
+   ARRAY   selArr ARRAY_SIZE(0,4)      { -> DECLARE                            }
+
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::ExportWorkflowFiles()
+
+   {----------------------}
+   { WORKFLOWS MAIN SETUP }
+   {----------------------}
+   {*** EXAMPLE
+   ARRAY selArr ARRAY_SIZE(0, 4)
+   array_select_add(selArr, ARRAY_SELECT_LIKE, "NAME", "BHC%")
+   array_select_add(selArr, ARRAY_SELECT_EQ, "REMOVEFLAG", FALSE)
+   array_select_add(selArr, ARRAY_SELECT_ORDER, "NAME", ARRAY_SELECT_ASCENDING)
+   self.ExportWorkflowAuto(selArr, "")
+   ***}
+   {self.ExportWorkflowAutoList("") { Comma separated list of workflow names }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export phrase csv files.                                           }
+{ Call self.ExportPhrase(), self.ExportPhraseLike() or ExportPhraseLikeV2()    }
+{ for every phrase you want to export.                                         }
+{ Use this method to create specific phrase export files for the current       }
+{ Release Candiate.                                                            }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportPhrasesRC_02(self)
+
+   {self.ExportPhraseAll("EX,CLUDE%")}
+   {self.ExportPhrase("YOUR_PHRID", "")}
+   {self.ExportPhraseLike("LSD_%", "")}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export phrase csv files.                                           }
+{ Call self.ExportPhrase(), self.ExportPhraseLike() or ExportPhraseLikeV2()    }
+{ for every phrase you want to export.                                         }
+{ Use this method to create specific phrase export files for the current       }
+{ Release Candiate.                                                            }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportPhrasesRC_01(self)
+
+   {self.ExportPhraseAll("EX,CLUDE%")}
+   {self.ExportPhrase("YOUR_PHRID", "")}
+   {self.ExportPhraseLike("LSD_%", "")}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export phrase csv files.                                }
+{ Call self.ExportPhrase() or self.ExportPhraseLike() for every phrase you     }
+{ want to export.                                                              }
+{ Use this method to create specific phrase export files for the current       }
+{ Release Candiate.                                                            }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportPhrasesRC(self)
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.lsd_setup_update_base::ExportPhrasesRC()
+
+   self.StartRCMethod("ExportPhrases")
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export phrase csv files.                                }
+{ Call self.ExportPhrase(), self.ExportPhraseLike() or ExportPhraseLikeV2()    }
+{ for every phrase you want to export.                                         }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportPhrases(self)
+
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::ExportPhrases()
+
+
+   {self.ExportPhraseAll("EX,CLUDE%")}
+   {self.ExportPhrase("YOUR_PHRID", "")}
+   {self.ExportPhraseLike("LSD_%", "")}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export saved criteria csv files.                                   }
+{ Call self.ExportCriteria() or self.ExportCriteriaLike() to define the        }
+{ criterias you want to export.                                                }
+{ This method is to create saved criteria CSV files for the Release candidate. }
+{ The created CSV files will be suffixed with _RC                              }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: Boolean, true if something is defined for export               }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCriteriaRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   {self.ExportCriterion("YOUR_CRTID", "")}
+   {self.ExportCriteriaLike("LSD_%", "")}
+   { retVal = TRUE }
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export saved criteria csv files.                                   }
+{ Call self.ExportCriteria() or self.ExportCriteriaLike() to define the        }
+{ criterias you want to export.                                                }
+{ This method is to create saved criteria CSV files for the Release candidate. }
+{ The created CSV files will be suffixed with _RC                              }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: Boolean, true if something is defined for export               }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCriteriaRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   {self.ExportCriterion("YOUR_CRTID", "")}
+   {self.ExportCriteriaLike("LSD_%", "")}
+   { retVal = TRUE }
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export saved criteria csv files.                        }
+{ Call self.ExportCriteria() or self.ExportCriteriaLike() to define the        }
+{ criterias you want to export.                                                }
+{ This method is to create saved criteria CSV files for the Release candidate. }
+{ The created CSV files will be suffixed with _RC                              }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: Boolean, true if something is defined for export               }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCriteriaRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportCriteriaRC()
+   retVal = self.StartRCMethod("ExportCriteria")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export saved criteria csv files.                        }
+{ Call self.ExportCriteria() or self.ExportCriteriaLike() to define the        }
+{ criterias you want to export.                                                }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: Boolean, true if something is defined for export               }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportCriteria(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportCriteria()
+
+   {self.ExportCriterion("YOUR_CRTID", "")}
+   {self.ExportCriteriaLike("LSD_%", "")}
+   { retVal = TRUE }
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export interface csv files.                                        }
+{ Call self.ExportInterface() for every interfac you want to export.           }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportInterfacesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export interface csv files.                                        }
+{ Call self.ExportInterface() for every interfac you want to export.           }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 1.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportInterfacesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export interface csv files.                             }
+{ Call self.ExportInterface() for every interfac you want to export.           }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate.                                                            }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportInterfacesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportInterfacesRC()
+   retVal = self.StartRCMethod("ExportInterfaces")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden method to export interface csv files.                             }
+{ Call self.ExportInterface() for every interface you want to export.          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportInterfaces(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportInterfaces()
+
+   {self.ExportInterface("YOUR_TABLE1", "")
+   self.ExportInterface("YOUR_TABLE%", "INTERFACE1")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_RPF_FilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_RPF_FilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_RPF_FilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::Export_RPF_FilesRC()
+   retVal = self.StartRCMethod("Export_RPF_Files")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_RPF_Files(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::Export_RPF_Files()
+
+   {
+   self.ExportVGLFileAddLike("LSD%")
+   self.ExportVGLFileAdd("$TABLE_LOADER")
+   self.ExportVGLFileAddV2("LSD%", "EX,CLUDE%")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_LAF_FilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_LAF_FilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_LAF_FilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::Export_LAF_FilesRC()
+   retVal = self.StartRCMethod("Export_LAF_Files")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_LAF_Files(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::Export_LAF_Files()
+
+   {
+   self.ExportVGLFileAddLike("LSD%")
+   self.ExportVGLFileAdd("$TABLE_LOADER")
+   self.ExportVGLFileAddV2("LSD%", "EX,CLUDE%")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_CAF_FilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_CAF_FilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_CAF_FilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::Export_CAF_FilesRC()
+   retVal = self.StartRCMethod("Export_CAF_Files")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_CAF_Files(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::Export_CAF_Files()
+
+   {
+   self.ExportVGLFileAddLike("LSD%")
+   self.ExportVGLFileAdd("$TABLE_LOADER")
+   self.ExportVGLFileAddV2("LSD%", "EX,CLUDE%")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SXF_FilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SXF_FilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SXF_FilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::Export_SXF_FilesRC()
+   retVal = self.StartRCMethod("Export_SXF_Files")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SXF_Files(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::Export_SXF_Files()
+
+   {
+   self.ExportVGLFileAddLike("LSD%")
+   self.ExportVGLFileAdd("$TABLE_LOADER")
+   self.ExportVGLFileAddV2("LSD%", "EX,CLUDE%")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SFF_FilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SFF_FilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SFF_FilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::Export_SFF_FilesRC()
+   retVal = self.StartRCMethod("Export_SFF_Files")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export vgl files files.                                            }
+{ Call ExportVGLFileAdd/ExportVGLFileLike to define the files.                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_Export_SFF_Files(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::Export_SFF_Files()
+
+   {
+   self.ExportVGLFileAddLike("LSD%")
+   self.ExportVGLFileAdd("$TABLE_LOADER")
+   self.ExportVGLFileAddV2("LSD%", "EX,CLUDE%")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Ovwritten main method to export VGL files                                    }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportVGLMain(self)
+
+   self.lsd_setup_update_base::ExportVGLMain()
+   self.ChangeRootPath(0)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export report template files.                                      }
+{ Call ExportReportTemplateAdd/ExportReportTemplateLike to define the files.   }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportReportTemplateFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export report template files.                                      }
+{ Call ExportReportTemplateAdd/ExportReportTemplateLike to define the files.   }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportReportTemplateFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export report template files.                                      }
+{ Call ExportReportTemplateAdd/ExportReportTemplateLike to define the files.   }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportReportTemplateFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportReportTemplateFilesRC()
+   retVal = self.StartRCMethod("ExportReportTemplateFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export Report Template files.                                      }
+{ Call ExportReportTemplateAdd/ExportReportTemplateLike to define the files.   }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportReportTemplateFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportReportTemplateFiles()
+
+   {
+   self.ExportReportTemplateAddLike("ABC%")
+   self.ExportReportTemplateAdd("ABCDEFG")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export label files.                                                }
+{ Call ExportLabelAdd/ExportLabelLike to define the files.                     }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportLabelFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export label files.                                                }
+{ Call ExportLabelAdd/ExportLabelLike to define the files.                     }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportLabelFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export label files.                                                }
+{ Call ExportLabelAdd/ExportLabelLike to define the files.                     }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportLabelFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportLabelFilesRC()
+   retVal = self.StartRCMethod("ExportLabelFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export label files.                                                }
+{ Call ExportLabelAdd/ExportLabelLike to define the files.                     }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportLabelFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportLabelFiles()
+
+   {
+   self.ExportLabelAddLike("ABC%")
+   self.ExportLabelAdd("ABCDEFG")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export imprint files.                                              }
+{ Call ExportImprintFile to export an imprint report                           }
+{ Use this method to create specific interface export files for the current    }
+{ Release Candiate 2.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportImprintFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export imprint files.                                              }
+{ Call ExportImprintFile to export an imprint report                           }
+{ Use this method to create the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportImprintFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export imprint files.                                              }
+{ Call ExportImprintFile to export an imprint report                           }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportImprintFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportImprintFilesRC()
+   retVal = self.StartRCMethod("ExportImprintFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export imprint files.                                              }
+{ Call ExportImprintFile to export an imprint report                           }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportImprintFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportImprintFiles()
+
+   { self.ExportImprintFile("BHC_Reports")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Copy solution assembly files - Release candidate specific.                   }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopySolutionAssembliesRC_02(self)
+
+
+   {self.CopySolutionAssembly("xyz.dll")}
+
+
+ENDROUTINE
+
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Copy solution assembly files - Release candidate specific.                   }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopySolutionAssembliesRC_01(self)
+
+
+   {self.CopySolutionAssembly("xyz.dll")}
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Main routine to copy solution assembly files for Release Candidate.          }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopySolutionAssembliesRC(self)
+
+
+   {-------------------------------------}
+   { R E L E A S E   C A N D I D A T E S }
+   {-------------------------------------}
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.lsd_setup_update_base::CopySolutionAssembliesRC()
+   self.StartRCMethod("CopySolutionAssemblies")
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Main routine to copy solution assembly files.                                }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopySolutionAssemblies(self)
+
+
+   {---------}
+   { M A I N }
+   {---------}
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::CopySolutionAssemblies()
+   {self.CopySolutionAssembly("xyz.dll")}
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Export forms - Release candidate specific.                                   }
+{ ExportForm creates the frm file and copy the overlay if available,           }
+{ ExportFormOverlay copy the overlay only.                                     }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportFormsRC_02(self)
+
+   {self.ExportForm("xyz")}                       { create frm file and copy overlay if available }
+   {self.ExportFormLike("xyz%", FALSE)}           { create frm files and copy overlay if available, FALSE=Check different cases }
+   {self.ExportFormLikeV2("x%", "ex%" FALSE)}     { create frm files and copy overlay if available, optional exclude ids, FALSE=Check different cases }
+   {self.ExportFormOverlay("xyz")}                { Copy overlay only }
+   {self.ExportAllFormOverlays()}                 { Copy all overlays }
+   {self.ExportFormTranslation("formName")}       { Copy the translated file(s) for the form }
+   {self.ExportAllFormTranslations()}             { Copy all translated form files }
+   {self.self.ExportFormOfType("", "PAGE", FALSE) { Copy all forms of a specific type }
+
+ENDROUTINE
+
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Export formsw - Release candidate specific.                                  }
+{ ExportForm creates the frm file and copy the overlay if available,           }
+{ ExportFormOverlay copy the overlay only.                                     }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportFormsRC_01(self)
+
+   {self.ExportForm("xyz")}                       { create frm file and copy overlay if available }
+   {self.ExportFormLike("xyz%", FALSE)}           { create frm files and copy overlay if available, FALSE=Check different cases }
+   {self.ExportFormLikeV2("x%", "ex%" FALSE)}     { create frm files and copy overlay if available, optional exclude ids, FALSE=Check different cases }
+   {self.ExportFormOverlay("xyz")}                { Copy overlay only }
+   {self.ExportAllFormOverlays()}                 { Copy all overlays }
+   {self.ExportFormTranslation("formName")}       { Copy the translated file(s) for the form }
+   {self.ExportAllFormTranslations()}             { Copy all translated form files }
+   {self.self.ExportFormOfType("", "PAGE", FALSE) { Copy all forms of a specific type }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Main routine to export forms.                                                }
+{ ExportForm creates the frm file and copy the overlay if available,           }
+{ ExportFormOverlay copy the overlay only.                                     }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportFormsRC(self)
+
+   {-------------------------------------}
+   { R E L E A S E   C A N D I D A T E S }
+   {-------------------------------------}
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.lsd_setup_update_base::ExportFormsRC()
+   self.StartRCMethod("ExportForms")
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Main routine to export forms.                                                }
+{ ExportForm creates the frm file and copy the overlay if available,           }
+{ ExportFormOverlay copy the overlay only.                                     }
+{------------------------------------------------------------------------------}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportForms(self)
+
+   {---------}
+   { M A I N }
+   {---------}
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::ExportForms()
+
+   {self.ExportForm("xyz")}                       { create frm file and copy overlay if available }
+   {self.ExportFormLike("xyz%", FALSE)}           { create frm files and copy overlay if available, FALSE=Check different cases }
+   {self.ExportFormLikeV2("x%", "ex%" FALSE)}     { create frm files and copy overlay if available, optional exclude ids, FALSE=Check different cases }
+   {self.ExportFormOverlay("xyz")}                { Copy overlay only }
+   {self.ExportAllFormOverlays()}                 { Copy all overlays }
+   {self.ExportFormTranslation("formName")}       { Copy the translated file(s) for the form }
+   {self.ExportAllFormTranslations()}             { Copy all translated form files }
+   {self.self.ExportFormOfType("", "PAGE", FALSE) { Copy all forms of a specific type }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export resource files.                                             }
+{ Call ExportResourceFile to export a resource file                            }
+{ Use this method to export the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportResourceFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export resource files.                                             }
+{ Call ExportResourceFile to export a resource file                            }
+{ Use this method to export the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportResourceFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export resource files.                                             }
+{ Call ExportResourceFile to export a resource file                            }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportResourceFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportResourceFilesRC()
+   retVal = self.StartRCMethod("ExportResourceFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export resource files.                                             }
+{ Call ExportResourceFile to export a resource file                            }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportResourceFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportResourceFiles()
+
+   {
+   self.ExportResourceFile("ABC")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export files from exe folder.                                      }
+{ Call ExportExeAndCfgFile to export a resource file                           }
+{ Use this method to export the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportExeAndCfgFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export files from exe folder.                                      }
+{ Call ExportExeAndCfgFile to export a resource file                           }
+{ Use this method to export the files for Release Candidate 1                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportExeAndCfgFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export files from exe folder.                                      }
+{ Call ExportExeAndCfgFile to export a resource file                           }
+{ Use this method to create the files for Release Candidate 2                  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportExeAndCfgFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportExeAndCfgFilesRC()
+   retVal = self.StartRCMethod("ExportExeAndCfgFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export files from exe folder.                                      }
+{ Call ExportExeAndCfgFile to export a resource file                           }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportExeAndCfgFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportExeAndCfgFiles()
+
+   {
+   self.ExportExeAndCfgFile("SampleManagerServerHost.exe.config")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export message files.                                              }
+{ Call ExportMessageFile/ExportMessageFileLike to export message files         }
+{ Use this method to export the files for Release Candidate 1                  }
+{ To prepare add. subfolders (e.g. de\de-DE\) use PrepareMessageSubFolderArray }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportMessageFilesRC_02(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export message files.                                              }
+{ Call ExportMessageFile/ExportMessageFileLike to export message files         }
+{ Use this method to export the files for Release Candidate 1                  }
+{ To prepare add. subfolders (e.g. de\de-DE\) use PrepareMessageSubFolderArray }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportMessageFilesRC_01(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   retVal = FALSE
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export message files.                                              }
+{ Call ExportMessageFile/ExportMessageFileLike to export message files         }
+{ Use this method to create the files for Release Candidate 2                  }
+{ To prepare add. subfolders (e.g. de\de-DE\) use PrepareMessageSubFolderArray }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportMessageFilesRC(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   retVal = self.lsd_setup_update_base::ExportMessageFilesRC()
+   retVal = self.StartRCMethod("ExportMessageFiles")
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to export message files.                                              }
+{ Call ExportMessageFile/ExportMessageFileLike to export message files         }
+{ To prepare add. subfolders (e.g. de\de-DE\) use PrepareMessageSubFolderArray }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_ExportMessageFiles(self)
+
+   DECLARE retVal                      { The return value of the function      }
+
+   self.ChangeRootPath(0)
+   retVal = self.lsd_setup_update_base::ExportMessageFiles()
+
+   {
+   self.ExportMessageFile("dummy1. txt")
+   self.ExportMessageFileLike("*.txt")
+   retVal = TRUE}
+
+   RETURN(retVal)
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all other actions - Release Candidate specific.                   }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_OtherActionsRC_02(self)
+
+   self.UpdateStatusForm("Other actions - Release Candidate 2")
+
+   {-------------------------------------------------}
+   { Extract GUID marked sections from structure.txt }
+   {-------------------------------------------------}
+   self.structGUIDs = self.defaultStructGUIDs
+
+
+   {---------------------------------------------------------------------------}
+   { Add all cabinets that should not be automatically selected                }
+   { ($ cabinets will never be automatically selected)                         }
+   { WIZ_ExplorerCabinetPrepareCabinetIDs                                      }
+   {    Param 1: Comma separated list of cabinet Ids.                          }
+   {    Param 2: Boolean, If TRUE list with ids to export, if FALSE list of    }
+   {             ids to exclude from the export.                               }
+   {    Param 3: If true export cabinets with $ in the nanme (only valid if    }
+   {             Param 2 is set to FALSE)                                      }
+   { WIZ_ExplorerCabinetPrepareCabinetIDsV2                                    }
+   {    Param 1: Comma separated list of cabinet IDs to include.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             "" means export all cabinets.                                 }
+   {    Param 2: Comma separated list of cabinet IDs to exclude.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             (Only necessary if Param 1 contains LIKEs.                    }
+   {---------------------------------------------------------------------------}
+   self.WIZ_ExplorerCabinetWizardActive               = self.defaultWIZ_ExplorerCabinetWizardActive
+   self.WIZ_ExplorerCabinetExpExplorer                = self.defaultWIZ_ExplorerCabinetExpExplorer
+   self.WIZ_ExplorerCabinetShowEPW                    = self.defaultWIZ_ExplorerCabinetShowEPW
+   self.WIZ_ExplorerCabinetExpMasterMenu              = self.defaultWIZ_ExplorerCabinetExpMasterMenu
+   self.WIZ_ExplorerCabinetExpMenuToolbar             = self.defaultWIZ_ExplorerCabinetExpMenuToolbar
+   self.WIZ_ExplorerCabinetExpRoleEntry               = self.defaultWIZ_ExplorerCabinetExpRoleEntry
+   self.WIZ_ExplorerCabinetRoleEntryRoleIDs           = self.defaultWIZ_ExplorerCabinetRoleEntryRoleIDs
+   self.WIZ_ExplorerCabinetExpMenuToolbarSingleFiles  = self.defaultWIZ_ExplorerCabinetExpMenuToolbarSF
+   self.WIZ_ExplorerCabinetExpMenuToolbarTBNames      = self.defaultWIZ_ExplorerCabinetExpMenuToolbarTBN
+   {array_select_add(self.WIZ_ExplorerCabinetExpMenuToolbarSelArr, ARRAY_SELECT_EQ, "TOOLBAR_NAME", "SYSTEM")}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("USER", FALSE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("TABLE_DETAILS,CUSTCABINET1", TRUE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDsV2("TABLE_DETAILS,CUSTCAB%", "")}
+
+
+   {-----------------------------------------}
+   { Config items (copy paste to setup file) }
+   {-----------------------------------------}
+   {self.WIZ_CreateStringsForCustConfigItems("")}
+
+
+   {--------------------------}
+   { Menu toolbar - MTB files }
+   {--------------------------}
+   {self.ExportMenuToolbarTree("SYSTEM:0000")}
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all other actions - Release Candidate specific.                   }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_OtherActionsRC_01(self)
+
+   self.UpdateStatusForm("Other actions - Release Candidate 1")
+
+   {-------------------------------------------------}
+   { Extract GUID marked sections from structure.txt }
+   {-------------------------------------------------}
+   self.structGUIDs = self.defaultStructGUIDs
+
+
+   {---------------------------------------------------------------------------}
+   { Add all cabinets that should not be automatically selected                }
+   { ($ cabinets will never be automatically selected)                         }
+   { WIZ_ExplorerCabinetPrepareCabinetIDs                                      }
+   {    Param 1: Comma separated list of cabinet Ids.                          }
+   {    Param 2: Boolean, If TRUE list with ids to export, if FALSE list of    }
+   {             ids to exclude from the export.                               }
+   {    Param 3: If true export cabinets with $ in the nanme (only valid if    }
+   {             Param 2 is set to FALSE)                                      }
+   { WIZ_ExplorerCabinetPrepareCabinetIDsV2                                    }
+   {    Param 1: Comma separated list of cabinet IDs to include.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             "" means export all cabinets.                                 }
+   {    Param 2: Comma separated list of cabinet IDs to exclude.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             (Only necessary if Param 1 contains LIKEs.                    }
+   {---------------------------------------------------------------------------}
+   self.WIZ_ExplorerCabinetWizardActive               = self.defaultWIZ_ExplorerCabinetWizardActive
+   self.WIZ_ExplorerCabinetExpExplorer                = self.defaultWIZ_ExplorerCabinetExpExplorer
+   self.WIZ_ExplorerCabinetShowEPW                    = self.defaultWIZ_ExplorerCabinetShowEPW
+   self.WIZ_ExplorerCabinetExpMasterMenu              = self.defaultWIZ_ExplorerCabinetExpMasterMenu
+   self.WIZ_ExplorerCabinetExpMenuToolbar             = self.defaultWIZ_ExplorerCabinetExpMenuToolbar
+   self.WIZ_ExplorerCabinetExpRoleEntry               = self.defaultWIZ_ExplorerCabinetExpRoleEntry
+   self.WIZ_ExplorerCabinetRoleEntryRoleIDs           = self.defaultWIZ_ExplorerCabinetRoleEntryRoleIDs
+   self.WIZ_ExplorerCabinetExpMenuToolbarSingleFiles  = self.defaultWIZ_ExplorerCabinetExpMenuToolbarSF
+   self.WIZ_ExplorerCabinetExpMenuToolbarTBNames      = self.defaultWIZ_ExplorerCabinetExpMenuToolbarTBN
+   {array_select_add(self.WIZ_ExplorerCabinetExpMenuToolbarSelArr, ARRAY_SELECT_EQ, "TOOLBAR_NAME", "SYSTEM")}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("USER", FALSE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("TABLE_DETAILS,CUSTCABINET1", TRUE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDsV2("TABLE_DETAILS,CUSTCAB%", "")}
+
+
+   {-----------------------------------------}
+   { Config items (copy paste to setup file) }
+   {-----------------------------------------}
+   {self.WIZ_CreateStringsForCustConfigItems("")}
+
+
+   {--------------------------}
+   { Menu toolbar - MTB files }
+   {--------------------------}
+   {self.ExportMenuToolbarTree("SYSTEM:0000")}
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden main method for all other actions - Release Candidate specific.   }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_OtherActionsRC(self)
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.StartRCMethod("OtherActions")
+
+   self.lsd_setup_update_base::OtherActionsRC()
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden main method for all other actions.                                }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_OtherActions(self)
+
+   self.ChangeRootPath(0)
+
+   {-------------------------------------------------}
+   { Extract GUID marked sections from structure.txt }
+   {-------------------------------------------------}
+   self.structGUIDs = self.defaultStructGUIDs
+
+
+   {---------------------------------------------------------------------------}
+   { Add all cabinets that should not be automatically selected                }
+   { ($ cabinets will never be automatically selected)                         }
+   { WIZ_ExplorerCabinetPrepareCabinetIDs                                      }
+   {    Param 1: Comma separated list of cabinet Ids.                          }
+   {    Param 2: Boolean, If TRUE list with ids to export, if FALSE list of    }
+   {             ids to exclude from the export.                               }
+   {    Param 3: If true export cabinets with $ in the nanme (only valid if    }
+   {             Param 2 is set to FALSE)                                      }
+   { WIZ_ExplorerCabinetPrepareCabinetIDsV2                                    }
+   {    Param 1: Comma separated list of cabinet IDs to include.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             "" means export all cabinets.                                 }
+   {    Param 2: Comma separated list of cabinet IDs to exclude.               }
+   {             If id contains a % sign the compare is done with LIKE,        }
+   {             otherwise with = .                                            }
+   {             (Only necessary if Param 1 contains LIKEs.                    }
+   {---------------------------------------------------------------------------}
+   self.WIZ_ExplorerCabinetWizardActive               = self.defaultWIZ_ExplorerCabinetWizardActive
+   self.WIZ_ExplorerCabinetExpExplorer                = self.defaultWIZ_ExplorerCabinetExpExplorer
+   self.WIZ_ExplorerCabinetShowEPW                    = self.defaultWIZ_ExplorerCabinetShowEPW
+   self.WIZ_ExplorerCabinetExpMasterMenu              = self.defaultWIZ_ExplorerCabinetExpMasterMenu
+   self.WIZ_ExplorerCabinetExpMenuToolbar             = self.defaultWIZ_ExplorerCabinetExpMenuToolbar
+   self.WIZ_ExplorerCabinetExpRoleEntry               = self.defaultWIZ_ExplorerCabinetExpRoleEntry
+   self.WIZ_ExplorerCabinetRoleEntryRoleIDs           = self.defaultWIZ_ExplorerCabinetRoleEntryRoleIDs
+   self.WIZ_ExplorerCabinetExpMenuToolbarSingleFiles  = self.defaultWIZ_ExplorerCabinetExpMenuToolbarSF
+   self.WIZ_ExplorerCabinetExpMenuToolbarTBNames      = self.defaultWIZ_ExplorerCabinetExpMenuToolbarTBN
+   {array_select_add(self.WIZ_ExplorerCabinetExpMenuToolbarSelArr, ARRAY_SELECT_EQ, "TOOLBAR_NAME", "SYSTEM")}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("USER", FALSE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDs("TABLE_DETAILS,CUSTCABINET1", TRUE, FALSE)}
+   {self.WIZ_ExplorerCabinetPrepareCabinetIDsV2("TABLE_DETAILS,CUSTCAB%", "")}
+
+
+   {-----------------------------------------}
+   { Config items (copy paste to setup file) }
+   {-----------------------------------------}
+   {self.WIZ_CreateStringsForCustConfigItems("")}
+
+
+   {--------------------------}
+   { Menu toolbar - MTB files }
+   {--------------------------}
+   {self.ExportMenuToolbarTree("SYSTEM:0000")}
+
+
+   self.lsd_setup_update_base::OtherActions()
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ A common method to do any other stuff not related to a specific setup  or    }
+{ release candidate.                                                           }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{ isInitCall         Boolean         If true it'S the first call before any    }
+{                                    other action. If FALSE it's the late call }
+{                                    (just before the other OtherAction        }
+{                                    methods.                                  }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_OtherActionsCommon(self, VALUE isInitCall)
+
+   IF isInitCall THEN
+      {-----------------}
+      { Initial actions }
+      {-----------------}
+      { e.g. self.SetMnemonicForMasterMenu(310000, 999999, TRUE) }
+   ELSE
+      {---------------}
+      { Final actions }
+      {---------------}
+   ENDIF {<- IF isInitCall THEN }
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all to restore files from UnderConstruction folder - Release<SPACE>}
+{ Candidate specific.                                                          }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_RepairFromUnderConstructionRC_02(self)
+
+   self.UpdateStatusForm("Restore from 'UnderConstruction' - Release Candidate 2")
+
+   self.repairUnderConstructionSubFolderSRC        = SETUP_SUBFOLDER_LIST
+   self.repairUnderConstructionSubFolderDST        = SETUP_SUBFOLDER_REPAIR_DEFAULT_DEST
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all to restore files from UnderConstruction folder - Release<SPACE>}
+{ Candidate specific.                                                          }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_RepairFromUnderConstructionRC_01(self)
+
+   self.UpdateStatusForm("Restore from 'UnderConstruction' - Release Candidate 1")
+
+   self.repairUnderConstructionSubFolderSRC        = SETUP_SUBFOLDER_LIST
+   self.repairUnderConstructionSubFolderDST        = SETUP_SUBFOLDER_REPAIR_DEFAULT_DEST
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all to restore files from UnderConstruction folder - Release<SPACE>}
+{ Candidate specific.                                                          }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_RepairFromUnderConstructionRC(self)
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.StartRCMethod("RepairFromUnderConstruction")
+
+   self.lsd_setup_update_base::RepairFromUnderConstructionRC()
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method for all to restore files from UnderConstruction folder<SPACE>}
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_RepairFromUnderConstruction(self)
+
+   self.ChangeRootPath(0)
+
+   self.repairUnderConstructionSubFolderSRC        = SETUP_SUBFOLDER_LIST
+   self.repairUnderConstructionSubFolderDST        = SETUP_SUBFOLDER_REPAIR_DEFAULT_DEST
+
+   self.lsd_setup_update_base::RepairFromUnderConstruction()
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to copy any other file - Release Candidate specific.                  }
+{ This version is for the Release Candidate 2.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopyAnyFilesRC_02(self)
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Method to copy any other file - Release Candidate specific.                  }
+{ This version is for the Release Candidate 1.                                 }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopyAnyFilesRC_01(self)
+
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden main method to copy any other file - Release Candidate specific.  }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopyAnyFilesRC(self)
+
+   self.ChangeRootPath(self.CURRENT_ACTIVE_ReleaseCandidate)
+   self.lsd_setup_update_base::CopyAnyFilesRC()
+   self.StartRCMethod("CopyAnyFiles")
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Overridden main method to copy any file.                                     }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_CopyAnyFiles(self)
+
+   self.ChangeRootPath(0)
+   self.lsd_setup_update_base::CopyAnyFiles()
+
+
+   {self.CopyAnyFile("example.txt", "c:\temp\", "files")}
+   {self.ExportSolution("Customization")}
+   {self.ExportAuditConfig()}
+
+ENDROUTINE
+
+
+{==============================================================================}
+{ Method for class nwa_update_setup                                            }
+{ Add the manual reminders to the log data array                               }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ self               Object          "Pointer to own object"  (defaultparam)   }
+{                                    This parameter doesn't appear in the      }
+{                                    actual Paramterlist.                      }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{=[05/10/2021 (SP)]============================================================}
+ROUTINE nwa_update_setup_action_AddReminderForManualActions(self)
+
+   self.lsd_setup_update_base::AddReminderForManualActions()
+
+   { e.g. add a reminder to the log }
+   {self.AddToLog("Do not forget to ...")}
+
+ENDROUTINE
+
+
+
+{##############################################################################}
+{##############################################################################}
+{##############################################################################}
+
+
+
+{==============================================================================}
+{ This routine is the mainroutine for external calling                         }
+{ Run LSD_SETUP_UPD_BASE1 to start the update wizard(s)                        }
+{==============================================================================}
+{ Parameter          Type            Comment                                   }
+{------------------------------------------------------------------------------}
+{ updCustObj         lsd_update_custom_setup                                   }
+{==============================================================================}
+{ Return-Value: None                                                           }
+{-[05/10/2021 (SP)]------------------------------------------------------------}
+GLOBAL ROUTINE main_custom_update_setup(updCustObj)
+
+   DECLARE curObj                    { Background-Copy-Object                  }
+
+   Define_Class_nwa_update_setup()
+
+   CREATE OBJECT CUSTOM_SETUP_UPDATE_STEPS, curObj
+   curObj.ACTIVE_OPTION_NO_UPDATE_REPACK_ONLY = updCustObj.ACTIVE_OPTION_NO_UPDATE_REPACK_ONLY
+   curObj.Execute()
+
+   { "Delete" the object }
+   CREATE OBJECT CUSTOM_SETUP_UPDATE_STEPS, curObj
+
+ENDROUTINE
+

@@ -7,8 +7,8 @@ export class ReportOutlineProvider implements vscode.DocumentSymbolProvider {
     private symbols: vscode.DocumentSymbol[];
 
     constructor() {
-        this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_]+\s*,?)*\))?/gi;
-        this.classPattern = /(define class)\s"?(?<className>[a-z_]*)"?/gi;
+        this.routinePattern = /(?<!.)((?<global>global)\s+)?(routine)\s+(?<routineName>[a-z_]*)(?<parameters>\s*\((\s*(value)?\s*[a-z_0-9]+\s*,?)*\))?/gi;
+        this.classPattern = /(define class)\s+(?<className>"?[a-z_]*"?)/gi;
         
         console.time("reportParsing");
 	}

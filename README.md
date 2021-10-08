@@ -1,7 +1,6 @@
-# SampleManager(R) development extension
-![Node.js CI](https://github.com/Sanifant/vgl-language/workflows/Node.js%20CI/badge.svg?branch=development)
-![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/stefanpetersen.samplemanager-tools.svg)
-![Installs](https://vsmarketplacebadge.apphb.com/installs-short/stefanpetersen.samplemanager-tools.svg)
+# SampleManager\(R\) development extension
+
+![Node.js CI](https://github.com/Sanifant/vgl-language/workflows/Node.js%20CI/badge.svg?branch=development) ![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/stefanpetersen.samplemanager-tools.svg) ![Installs](https://vsmarketplacebadge.apphb.com/installs-short/stefanpetersen.samplemanager-tools.svg)
 
 This extension can be used to help you with SampleManager VGL deployment.
 
@@ -9,30 +8,25 @@ This extension can be used to help you with SampleManager VGL deployment.
 
 ### vgl coding
 
-Simple syntax highlighting is provided.
-The Outline Box will show the classes and the corresponding functions.
+Simple syntax highlighting is provided. The Outline Box will show the classes and the corresponding functions.
 
-![Outline Box](media/vgl-outline.png)
-
+![Outline Box](.gitbook/assets/vgl-outline.png)
 
 The class functions will be renamed according to the classes.
 
-*class_action_function* will be shown as *function* while classname and action keyword is being removed from outline.
+_class\_action\_function_ will be shown as _function_ while classname and action keyword is being removed from outline.
 
-Constructor will have the same name as the class, while *class_initialisation* is being removed.
+Constructor will have the same name as the class, while _class\_initialisation_ is being removed.
 
 ## structure file
 
-Simple syntax highlighting is provided.
-Also the tables where shown in the outline box
+Simple syntax highlighting is provided. Also the tables where shown in the outline box
 
-![Outline Box](media/structure-outline.png)
-
+![Outline Box](.gitbook/assets/structure-outline.png)
 
 ## Requirements
 
-For the full functionality a SampleManager installation should ve available.
-This extension set was only tested with versions higher than 12.1.
+For the full functionality a SampleManager installation should ve available. This extension set was only tested with versions higher than 12.1.
 
 ## Extension Settings
 
@@ -51,7 +45,9 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 Users appreciate release notes as you update your extension.
 
-### >1.0.0
+### &gt;1.0.0
+
 beta release!!!
 
 Once the first version/release is created, the subsequent minor versions will be described here
+

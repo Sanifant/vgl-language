@@ -1,12 +1,12 @@
 
 import * as vscode from 'vscode';
+import { DataStoreUnit, Structure, Table, View } from './structure';
 
 
 declare global {
     export interface String {
         capitalize(): string;
-
-}
+    }
 }
 
 String.prototype.capitalize = function(): string {
@@ -21,19 +21,18 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     private linksTo: RegExp;
     private datatype: RegExp;
     private symbols: vscode.DocumentSymbol[];
+    private structureItems: Structure;
 
-    constructor() {
+    constructor(dataItems: Structure) {
         console.time("structure"); 
         
         //globally parses the Structure.txt file.  Ignoring Comment lines and Blocks, then grouping major types, getting their name and sub attributes as a long string for later parsing.
         this.regexglobal = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<groupType>sequence|table|field|view|collection|index|select_clause|oracle_specific_select|sqlserver_specific_select)[\s]+(?<Name>[_A-Za-z0-9]+)(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
 
-                //Field or table attribute regex syntaxes.
-                this.collectAttrib = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\bon\b\s+(?<collectTable>[a-zA-Z_]+)\s+(\busing\b)\s+(?<collectField>[a-zA-Z_]+)[^\s\n]/gi;
-                this.linksTo = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<linkType>\blinks_to\b|\blinks_to parent\b)\s+(?<linkedTable>[a-zA-Z_]+)\s*[.]\s*(?<linkedField>[a-zA-Z_]+)/gi;
-                this.datatype = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)datatype\s*(?<datatype>[a-zA-Z_]+)/gi;
-
-
+        //Field or table attribute regex syntaxes.
+        this.collectAttrib = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)\bon\b\s+(?<collectTable>[a-zA-Z_]+)\s+(\busing\b)\s+(?<collectField>[a-zA-Z_]+)[^\s\n]/gi;
+        this.linksTo = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<linkType>\blinks_to\b|\blinks_to parent\b)\s+(?<linkedTable>[a-zA-Z_]+)\s*[.]\s*(?<linkedField>[a-zA-Z_]+)/gi;
+        this.datatype = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)datatype\s*(?<datatype>[a-zA-Z_]+)/gi;
     }
 
     provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
@@ -51,9 +50,9 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
         console.timeLog("structure", "\tparsing document");
         let regex = new RegExp(this.regexglobal);
         let matches: RegExpExecArray;
+        let currentDataItem: DataStoreUnit;
         var scopedsymbol;  
-        var tablescope = true;
-    
+        var tablescope = true;    
         
         while ((matches = regex.exec(document.getText())) !== null) {
             let selectionStart = matches.index;
@@ -62,21 +61,17 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
             let attributes = matches.groups.AttribString;
             let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-
-             if (groupType === 'field' || groupType === 'index' || groupType === 'collection')
-            {
-                               
+            if (groupType === 'field' || groupType === 'index' || groupType === 'collection')
+            {                               
                 tablescope = false;
-
                 let name = matches.groups.Name.toLocaleLowerCase();
-                console.timeLog("structure", `\tFound: ${groupType} - ${name}`);   
-
+                console.timeLog("structure", `\tFound: ${groupType} - ${name}`);                   
 
                 if(groupType === 'field'){
                     let fieldsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Field, range, range);
                     scopedsymbol.children.push(fieldsymbol);
 
-
+                    
                     //Work through different types of field attributes
 
                     //Datatype Attributes
@@ -92,7 +87,6 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
 
                         let attribsymbol = new vscode.DocumentSymbol(attribute, 'Datatype', vscode.SymbolKind.Variable, range, range);
                         fieldsymbol.children.push(attribsymbol);
-                        
                     }
                     //Links To Attributes
                     attribregex = new RegExp(this.linksTo);
@@ -107,12 +101,8 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                         let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
                         let attribsymbol = new vscode.DocumentSymbol(attribute, attribmatches.groups.linkType.toLocaleLowerCase().capitalize(), vscode.SymbolKind.Interface, range, range);
-                        fieldsymbol.children.push(attribsymbol);
-                        
+                        fieldsymbol.children.push(attribsymbol);                        
                     }
-
-
-
                 }
                 if(groupType === 'index')
                 {
@@ -138,33 +128,17 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                         let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
                         let attribsymbol = new vscode.DocumentSymbol(attribute, groupType, vscode.SymbolKind.Variable, range, range);
-                        collectsymbol.children.push(attribsymbol);
-                        
+                        collectsymbol.children.push(attribsymbol);                        
                     }
-
-
-
                 }
-
-
-
             }
             if (groupType === 'select_clause' || groupType === 'oracle_specific_select' || groupType === 'sqlserver_specific_select')
             {
-
-                tablescope = false;
-                
+                tablescope = false;                
                 console.timeLog("structure", `\tFound: ${groupType}`);   
-
                 let selectsymbol = new vscode.DocumentSymbol(groupType, 'Select Statement', vscode.SymbolKind.TypeParameter, range, range);
-
-                scopedsymbol.children.push(selectsymbol);
-
-
-                
+                scopedsymbol.children.push(selectsymbol);                
             }
-            
-
 
             if (groupType === 'sequence')
             {
@@ -176,13 +150,10 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                 let name = matches.groups.Name.toLocaleLowerCase();
                 console.timeLog("structure", `\tFound: ${groupType} - ${name}`);   
                 scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.File, range, range);
-                
-
             }
 
             if (groupType === 'table' || groupType === 'view')
             {
-
                 //Commit any previous scope before starting a new one.
                 //Assumptions is that the previous entry was a field/ select statement, sequence, etc...
                 if(tablescope === false)
@@ -190,32 +161,25 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
                     this.symbols.push(scopedsymbol);
                 }
 
-
                 let name = matches.groups.Name.toLocaleLowerCase();
                 console.timeLog("structure", `\tFound: ${groupType} - ${name}`);      
-
                 console.timeLog("structure", `\tStarting New symbol: ${groupType} - ${name}`);  
-                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Key, range, range);
+                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Key, range, range);   
                 
-                tablescope = true;
+                if(groupType === "table"){
+                    currentDataItem = new Table(name, groupType.capitalize(), range, range);         
+                    this.structureItems.dataItems.push(currentDataItem);
+                }
+                if(groupType === "view"){
+                    currentDataItem = new View(name, groupType.capitalize(), range, range);         
+                    this.structureItems.dataItems.push(currentDataItem);
+                }
 
-
-                
+                tablescope = true;               
             }
-
-
-
-
-
         }
 
         //Commit the final scope
         this.symbols.push(scopedsymbol);
-
-
-
-
-
     }
-
 }

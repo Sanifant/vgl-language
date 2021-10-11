@@ -3,11 +3,15 @@
 import * as vscode from 'vscode';
 import { MessageOutlineProvider } from './messageOutline';
 import { ReportOutlineProvider } from './reportOutline';
-import { StructureOutlineProvider } from './structureOutline';
+import { StructureOutlineProvider } from './structure/structureOutline';
+import * as data from './structure/structure';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
+
 export function activate(context: vscode.ExtensionContext) {
+
+    let dataItems = new data.Structure();
 
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
@@ -18,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
             {scheme: "file", language: "sm-structure"}, 
-            new StructureOutlineProvider())
+            new StructureOutlineProvider(dataItems))
     );
 
     context.subscriptions.push(

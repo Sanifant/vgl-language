@@ -13,7 +13,7 @@ index_defaults
         oracle_location                    'VGSM_DB' 
         sqlserver_location                 'PRIMARY' ;
 
-table sample_point;
+table sample_lpoint_s;
 
 field identity alias identifier
       datatype identity(10)
@@ -43,6 +43,7 @@ field has_attachments
       datatype boolean
       used_for has_attachments ;
 
+      
 
 table report alias reportformat;
 
@@ -413,6 +414,7 @@ table sample_formulation;
               prompt_type choose
               choose_type SAMP_FORM;
 
+
 	field amount_used
 	      datatype real
 	      lower_limit 0.0;
@@ -653,7 +655,9 @@ field order_number alias component_number datatype packed_decimal used_for order
 field result_type datatype text (1)
       prompt_type choose
       choose_type RES_TYPE;
+      
 field units
+
       links_to unit_header.identity;
 field minimum alias min datatype real;
 field maximum alias max datatype real;
@@ -746,6 +750,7 @@ field value datatype real;
 field text datatype text(234) used_for display_browse ( 2 );
 field places datatype integer;
 field out_of_range datatype boolean;
+
 field status datatype text (1)
       prompt_type choose
       choose_type RESL_STAT;
@@ -3513,6 +3518,7 @@ table c_workflow_journal
         tableset default_table_set;
 
 table config_header ;
+
 
         field identity
               datatype identity ( 30 )
@@ -6578,7 +6584,7 @@ select_clause
 		master_menu ;
 
 
-table access_log ;
+table access_logs ;
 
 field session_id
         datatype packed_decimal

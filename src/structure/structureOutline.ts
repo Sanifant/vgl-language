@@ -1,5 +1,6 @@
 
 import * as vscode from 'vscode';
+import { downloadAndUnzipVSCode } from 'vscode-test';
 import { DataStoreUnit, Structure, Table, View } from './structure';
 
 
@@ -23,8 +24,10 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
     private symbols: vscode.DocumentSymbol[];
     private structureItems: Structure;
 
-    constructor(dataItems: Structure) {
+    constructor() {
         console.time("structure"); 
+
+        this.structureItems = new Structure();
         
         //globally parses the Structure.txt file.  Ignoring Comment lines and Blocks, then grouping major types, getting their name and sub attributes as a long string for later parsing.
         this.regexglobal = /(?<!{(?:(?!})[\s\S\r])*?)(?<!{\*(?:(?!\*})[\s\S\r])*?)(?<groupType>sequence|table|field|view|collection|index|select_clause|oracle_specific_select|sqlserver_specific_select)[\s]+(?<Name>[_A-Za-z0-9]+)(?<AttribString>[(),'`<>-\s\[=\]_.\d$+/*A-Za-z]*);/gi;
@@ -40,146 +43,160 @@ export class StructureOutlineProvider implements vscode.DocumentSymbolProvider {
         {
             this.symbols = [];
 
-            this.parseDocument(document);
+                this.parseDocument(document, null); 
             
-            resolve(this.symbols);
+            resolve(this.structureItems.dataItems);
         });
     }
 
-    private parseDocument(document: vscode.TextDocument): void {
-        console.timeLog("structure", "\tparsing document");
-        let regex = new RegExp(this.regexglobal);
-        let matches: RegExpExecArray;
-        let currentDataItem: DataStoreUnit;
-        var scopedsymbol;  
-        var tablescope = true;    
+    parseDocument(document: vscode.TextDocument, selection: vscode.Selection): void {
         
-        while ((matches = regex.exec(document.getText())) !== null) {
-            let selectionStart = matches.index;
-            let selectionEnd = regex.lastIndex;
-            let groupType = matches.groups.groupType.toLocaleLowerCase();
-            let attributes = matches.groups.AttribString;
-            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+        if(this.structureItems.hash !== document.version){
+            console.timeLog("structure", "\tparsing document");
+            let regex = new RegExp(this.regexglobal);
+            let matches: RegExpExecArray;
+            let currentDataItem: DataStoreUnit;
+            var scopedsymbol: vscode.DocumentSymbol;  
+            var tablescope = true;    
+            this.structureItems.hash = document.version;        
+            
+            while ((matches = regex.exec(document.getText())) !== null) {
+                let selectionStart = matches.index;
+                let selectionEnd = regex.lastIndex;
+                let groupType = matches.groups.groupType.toLocaleLowerCase();
+                let attributes = matches.groups.AttribString;
+                let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
 
-            if (groupType === 'field' || groupType === 'index' || groupType === 'collection')
-            {                               
-                tablescope = false;
-                let name = matches.groups.Name.toLocaleLowerCase();
-                console.timeLog("structure", `\tFound: ${groupType} - ${name}`);                   
+                if (groupType === 'field' || groupType === 'index' || groupType === 'collection')
+                {                               
+                    tablescope = false;
+                    let name = matches.groups.Name.toLocaleLowerCase();
+                    console.timeLog("structure", `\tFound: ${groupType} - ${name}`);                   
 
-                if(groupType === 'field'){
-                    let fieldsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Field, range, range);
-                    scopedsymbol.children.push(fieldsymbol);
+                    if(groupType === 'field'){
+                        let fieldsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Field, range, range);
+                        scopedsymbol.children.push(fieldsymbol);
 
+                        
+                        //Work through different types of field attributes
+
+                        //Datatype Attributes
+                        let attribregex = new RegExp(this.datatype);
+                        let attribmatches: RegExpExecArray;
+
+                        while ((attribmatches = attribregex.exec(attributes)) !== null)
+                        {
+                            let selectionStart = matches.index;
+                            let selectionEnd = regex.lastIndex;
+                            let attribute = attribmatches.groups.datatype.toLocaleLowerCase();
+                            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+
+                            let attribsymbol = new vscode.DocumentSymbol(attribute, 'Datatype', vscode.SymbolKind.Variable, range, range);
+                            fieldsymbol.children.push(attribsymbol);
+                        }
+                        //Links To Attributes
+                        attribregex = new RegExp(this.linksTo);
+                        
+                        while ((attribmatches = attribregex.exec(attributes)) !== null)
+                        {
+                            let selectionStart = matches.index;
+                            let selectionEnd = regex.lastIndex;
+                            let attribute = `>${attribmatches.groups.linkedTable.toLocaleLowerCase()} >> ${attribmatches.groups.linkedField.toLocaleLowerCase()}`;
+                            //let attribute = attribmatches.groups.linkedTable.toLocaleLowerCase();
+
+                            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+
+                            let attribsymbol = new vscode.DocumentSymbol(attribute, attribmatches.groups.linkType.toLocaleLowerCase().capitalize(), vscode.SymbolKind.Interface, range, range);
+                            fieldsymbol.children.push(attribsymbol);                        
+                        }
+                    }
+                    if(groupType === 'index')
+                    {
+                        let indexsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Struct, range, range);
+                        scopedsymbol.children.push(indexsymbol);
+                    }
+                    if(groupType === 'collection')
+                    {
+                        let collectsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Object, range, range);
+                        scopedsymbol.children.push(collectsymbol);
+
+                        //Work through different types of field attributes
+
+                        //Datatype Attributes
+                        let attribregex = new RegExp(this.collectAttrib);
+                        let attribmatches: RegExpExecArray;
+
+                        while ((attribmatches = attribregex.exec(attributes)) !== null)
+                        {
+                            let selectionStart = matches.index;
+                            let selectionEnd = regex.lastIndex;
+                            let attribute = `>${attribmatches.groups.collectTable.toLocaleLowerCase()} >> ${attribmatches.groups.collectField.toLocaleLowerCase()}`;
+                            let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
+
+                            let attribsymbol = new vscode.DocumentSymbol(attribute, groupType, vscode.SymbolKind.Variable, range, range);
+                            collectsymbol.children.push(attribsymbol);                        
+                        }
+                    }
+                }
+                if (groupType === 'select_clause' || groupType === 'oracle_specific_select' || groupType === 'sqlserver_specific_select')
+                {
+                    tablescope = false;                
+                    console.timeLog("structure", `\tFound: ${groupType}`);   
+                    let selectsymbol = new vscode.DocumentSymbol(groupType, 'Select Statement', vscode.SymbolKind.TypeParameter, range, range);
+                    scopedsymbol.children.push(selectsymbol);                
+                }
+
+                if (groupType === 'sequence')
+                {
+                    if(tablescope === false)
+                    {
+                        this.symbols.push(scopedsymbol);
+                    }
+
+                    let name = matches.groups.Name.toLocaleLowerCase();
+                    console.timeLog("structure", `\tFound: ${groupType} - ${name}`);   
+                    scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.File, range, range);
+                }
+
+                if (groupType === 'table' || groupType === 'view')
+                {
+                    //Commit any previous scope before starting a new one.
+                    //Assumptions is that the previous entry was a field/ select statement, sequence, etc...
+                    if(tablescope === false)
+                    {
+                        this.symbols.push(scopedsymbol);
+                    }
+
+                    let name = matches.groups.Name.toLocaleLowerCase();
+                    console.timeLog("structure", `\tFound: ${groupType} - ${name}`);      
+                    console.timeLog("structure", `\tStarting New symbol: ${groupType} - ${name}`);  
+                    scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Key, range, range);
                     
-                    //Work through different types of field attributes
-
-                    //Datatype Attributes
-                    let attribregex = new RegExp(this.datatype);
-                    let attribmatches;
-
-                    while ((attribmatches = attribregex.exec(attributes)) !== null)
-                    {
-                        let selectionStart = matches.index;
-                        let selectionEnd = regex.lastIndex;
-                        let attribute = attribmatches.groups.datatype.toLocaleLowerCase();
-                        let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
-
-                        let attribsymbol = new vscode.DocumentSymbol(attribute, 'Datatype', vscode.SymbolKind.Variable, range, range);
-                        fieldsymbol.children.push(attribsymbol);
+                    if(groupType === "table"){
+                        console.debug(`Creating Table ${name}`);
+                        currentDataItem = new Table(name, groupType.capitalize(), range, range);         
+                        this.structureItems.addDataItem(currentDataItem);
                     }
-                    //Links To Attributes
-                    attribregex = new RegExp(this.linksTo);
-                    
-                    while ((attribmatches = attribregex.exec(attributes)) !== null)
-                    {
-                        let selectionStart = matches.index;
-                        let selectionEnd = regex.lastIndex;
-                        let attribute = `>${attribmatches.groups.linkedTable.toLocaleLowerCase()} >> ${attribmatches.groups.linkedField.toLocaleLowerCase()}`;
-                        //let attribute = attribmatches.groups.linkedTable.toLocaleLowerCase();
-
-                        let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
-
-                        let attribsymbol = new vscode.DocumentSymbol(attribute, attribmatches.groups.linkType.toLocaleLowerCase().capitalize(), vscode.SymbolKind.Interface, range, range);
-                        fieldsymbol.children.push(attribsymbol);                        
+                    if(groupType === "view"){
+                        console.debug(`Creating View ${name}`);
+                        currentDataItem = new View(name, groupType.capitalize(), range, range);         
+                        this.structureItems.addDataItem(currentDataItem);
                     }
-                }
-                if(groupType === 'index')
-                {
-                    let indexsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Struct, range, range);
-                    scopedsymbol.children.push(indexsymbol);
-                }
-                if(groupType === 'collection')
-                {
-                    let collectsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Object, range, range);
-                    scopedsymbol.children.push(collectsymbol);
 
-                    //Work through different types of field attributes
-
-                    //Datatype Attributes
-                    let attribregex = new RegExp(this.collectAttrib);
-                    let attribmatches;
-
-                    while ((attribmatches = attribregex.exec(attributes)) !== null)
-                    {
-                        let selectionStart = matches.index;
-                        let selectionEnd = regex.lastIndex;
-                        let attribute = `>${attribmatches.groups.collectTable.toLocaleLowerCase()} >> ${attribmatches.groups.collectField.toLocaleLowerCase()}`;
-                        let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
-
-                        let attribsymbol = new vscode.DocumentSymbol(attribute, groupType, vscode.SymbolKind.Variable, range, range);
-                        collectsymbol.children.push(attribsymbol);                        
-                    }
+                    tablescope = true;               
                 }
             }
-            if (groupType === 'select_clause' || groupType === 'oracle_specific_select' || groupType === 'sqlserver_specific_select')
-            {
-                tablescope = false;                
-                console.timeLog("structure", `\tFound: ${groupType}`);   
-                let selectsymbol = new vscode.DocumentSymbol(groupType, 'Select Statement', vscode.SymbolKind.TypeParameter, range, range);
-                scopedsymbol.children.push(selectsymbol);                
-            }
 
-            if (groupType === 'sequence')
-            {
-                if(tablescope === false)
-                {
-                    this.symbols.push(scopedsymbol);
-                }
-
-                let name = matches.groups.Name.toLocaleLowerCase();
-                console.timeLog("structure", `\tFound: ${groupType} - ${name}`);   
-                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.File, range, range);
-            }
-
-            if (groupType === 'table' || groupType === 'view')
-            {
-                //Commit any previous scope before starting a new one.
-                //Assumptions is that the previous entry was a field/ select statement, sequence, etc...
-                if(tablescope === false)
-                {
-                    this.symbols.push(scopedsymbol);
-                }
-
-                let name = matches.groups.Name.toLocaleLowerCase();
-                console.timeLog("structure", `\tFound: ${groupType} - ${name}`);      
-                console.timeLog("structure", `\tStarting New symbol: ${groupType} - ${name}`);  
-                scopedsymbol = new vscode.DocumentSymbol(name, groupType.capitalize(), vscode.SymbolKind.Key, range, range);   
-                
-                if(groupType === "table"){
-                    currentDataItem = new Table(name, groupType.capitalize(), range, range);         
-                    this.structureItems.dataItems.push(currentDataItem);
-                }
-                if(groupType === "view"){
-                    currentDataItem = new View(name, groupType.capitalize(), range, range);         
-                    this.structureItems.dataItems.push(currentDataItem);
-                }
-
-                tablescope = true;               
-            }
+            //Commit the final scope
+            this.symbols.push(scopedsymbol);
         }
+    }
 
-        //Commit the final scope
-        this.symbols.push(scopedsymbol);
+    private hashCode(str: string): number {
+        var h: number = 0;
+        for (var i = 0; i < str.length; i++) {
+            h = 31 * h + str.charCodeAt(i);
+        }
+        return h & 0xFFFFFFFF;
     }
 }

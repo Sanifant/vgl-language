@@ -9,9 +9,15 @@ import * as data from './structure/structure';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
-export function activate(context: vscode.ExtensionContext) {
+let myStatusBarItem: vscode.StatusBarItem;
+let structureParser:StructureOutlineProvider;
+let x: number;
+let y: number;
 
-    let dataItems = new data.Structure();
+export function activate(context: vscode.ExtensionContext) {
+    x=0;
+    y=0;
+    structureParser = new StructureOutlineProvider();
 
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
@@ -22,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
             {scheme: "file", language: "sm-structure"}, 
-            new StructureOutlineProvider(dataItems))
+            structureParser)
     );
 
     context.subscriptions.push(
@@ -31,6 +37,27 @@ export function activate(context: vscode.ExtensionContext) {
             new MessageOutlineProvider()
         )
     );
+
+	// create a new status bar item that we can now manage
+	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	//myStatusBarItem.command = myCommandId;
+	context.subscriptions.push(myStatusBarItem);
+
+	// register some listener that make sure the status bar 
+	// item always up-to-date
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(eins));
+	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(zwei));
+}
+
+function eins(e:vscode.TextEditor) : void{
+    structureParser.parseDocument(e.document, e.selection);
+    myStatusBarItem.text = `$(megaphone) onDidChangeActiveTextEditor ${x++}`;
+    myStatusBarItem.show();
+}
+function zwei(e:vscode.TextEditorSelectionChangeEvent) : void{
+    structureParser.parseDocument(e.textEditor.document, e.selections[0]);
+    myStatusBarItem.text = `$(megaphone) onDidChangeTextEditorSelection ${y++}`;
+    myStatusBarItem.show();
 }
 
 // this method is called when your extension is deactivated

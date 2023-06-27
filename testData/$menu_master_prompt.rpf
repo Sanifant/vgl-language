@@ -1,0 +1,388 @@
+{******************************************************************************
+*
+* Module Name   : $MENU_MASTER_PROMPT.RPF
+*
+* Purpose       : Special prompt type for getting an Icon
+*
+* Document Ref. :
+*
+* Specification :
+*
+* Portability   : Not Checked
+*
+* Re-entrant    : Yes
+*
+*******************************************************************************}
+
+SET COMPILE_OPTION DECLARE
+
+JOIN STANDARD_LIBRARY STD_CLIENT
+JOIN STANDARD_LIBRARY STD_UTILS
+JOIN STANDARD_LIBRARY STD_CLASS
+
+JOIN LIBRARY $LIB_LIST_BROWSER
+JOIN LIBRARY $EXPLORER_UTILS
+JOIN LIBRARY $PROMPT_LIST
+JOIN LIBRARY $LIB_UTILS
+
+SET NAME "DEFER/"
+ENABLE WINDOWS
+
+{*******************************************************************************
+*                           C O N S T A N T S
+*******************************************************************************}
+
+GLOBAL CONSTANT PROMPT_MENU_CLASS     = "STDPROMPTMENU"
+
+CONSTANT        PROMPT_MENU_TYPE_PRIV = "PRIVILEGE"
+CONSTANT        PROMPT_MENU_TYPE_AUX  = "AUXILIARY"
+CONSTANT        PROMPT_MENU_TYPE_EXP  = "RMB"
+CONSTANT        PROMPT_MENU_TYPE_MENU = "MENU"
+CONSTANT        PROMPT_MENU_TYPE_OLD  = "OBSOLETE"
+
+CONSTANT        PROMPT_MENU_ICON_PRIV = "INT_KEY"
+CONSTANT        PROMPT_MENU_ICON_EXP  = "INT_MENU"
+CONSTANT        PROMPT_MENU_ICON_AUX  = "INT_AUX_ACTION"
+CONSTANT        PROMPT_MENU_ICON_MENU = "INT_LIGHTNING"
+CONSTANT        PROMPT_MENU_ICON_NONE = "INT_HELP"
+CONSTANT        PROMPT_MENU_ICON_OLD  = "INT_REJECT"
+
+{*******************************************************************************
+*                           M A I N   C O D E 
+*******************************************************************************}
+
+EXIT
+
+{*******************************************************************************
+*                       G L O B A L   R O U T I N E S
+*******************************************************************************}
+
+GLOBAL
+ROUTINE prompt_menu_initialise
+
+{
+*	Initialise the library.
+*
+*******************************************************************************}
+
+	IF NOT ( GLOBAL ( "LIBRARY_INITIALISED" ) ) THEN
+
+		std_prompt_menu_class_declare ( )
+		SET GLOBAL "LIBRARY_INITIALISED" TO TRUE
+
+	ENDIF
+
+ENDROUTINE { prompt_menu_initialise }
+
+{******************************************************************************}
+
+GLOBAL
+ROUTINE prompt_menu ( prompt_object )
+
+{
+*	Routine called whenever a prompt for a Master Menu item is required.
+*	Should create a prompt object and store into parameter. This object
+*	will then be used by the internal code.
+*
+*******************************************************************************}
+
+	prompt_menu_initialise ( )
+	CREATE OBJECT PROMPT_MENU_CLASS , prompt_object
+
+ENDROUTINE { prompt_menu }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_class_declare
+
+{
+*	Class Definition of the Menu Prompt Class.
+*
+*******************************************************************************}
+
+	DEFINE CLASS PROMPT_MENU_CLASS
+
+		INHERIT "STD_PROMPT_FIELD_INTEGER"
+
+		INITIALISATION
+
+		PROPERTIES
+
+			"barmenu"             ,   { Browse on the Barmenu      }
+			"menu_type"               { A Specific Type.           }
+
+		ACTIONS 
+
+			"browse"              ,   { Override the Browse Action }
+			"format_before"       ,   { Override the Format Before }
+			"format_after"        ,   { Override the Format After  }
+			"start_prompt"            { Override the Start Prompt  }
+
+	END CLASS
+
+ENDROUTINE { std_prompt_menu_class_declare }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_class_initialisation ( self )
+
+{
+*	Class Initialisation
+*
+*******************************************************************************}
+
+	self . is_spin   = FALSE
+	self . menu_type = EMPTY
+	self . barmenu   = FALSE
+
+ENDROUTINE { std_prompt_menu_class_initialisation }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_action_start_prompt ( self )
+
+{
+*	Make sure we pick up the Correct Select Arrays. 
+*
+*******************************************************************************}
+
+	OBJECT_INVOKE_CLASS ( self, "STD_PROMPT_FIELD_INTEGER", "START_PROMPT" )
+
+	IF self . menu_type <> EMPTY THEN
+
+		ARRAY_SELECT_ADD ( self . mandatory_array, ARRAY_SELECT_PUSH ,
+		                   EMPTY, EMPTY                              )
+		ARRAY_SELECT_ADD ( self . mandatory_array, ARRAY_SELECT_EQ   ,
+		                   "TYPE", self . menu_type                  )
+		ARRAY_SELECT_ADD ( self . mandatory_array, ARRAY_SELECT_POP  ,
+		                   EMPTY, EMPTY                              )
+		                   
+	ELSE
+
+		{ All Items will show up. }
+
+	ENDIF
+
+ENDROUTINE { std_prompt_menu_action_start_prompt }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_action_format_before ( self )
+
+{
+*	Lets do a bit of Formatting to remove "0"
+*
+*******************************************************************************}
+
+	OBJECT_INVOKE_CLASS ( self, "STD_PROMPT_FIELD_INTEGER",
+	                      "FORMAT_BEFORE"                 )
+
+	IF self . text = 0 THEN
+	
+		self . text = ""
+
+	ENDIF
+
+ENDROUTINE { std_prompt_menu_action_format_before }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_action_format_after ( self )
+
+{
+*	Lets do a bit of Formatting to remove "0"
+*
+*******************************************************************************}
+
+	OBJECT_INVOKE_CLASS ( self, "STD_PROMPT_FIELD_INTEGER",
+	                      "FORMAT_AFTER"                  )
+
+	IF self . text = 0 THEN
+	
+		self . text = ""
+
+	ENDIF
+
+ENDROUTINE { std_prompt_menu_action_format_after }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_action_browse ( self )
+
+{
+*	Do a Fancy Browse.
+*
+*******************************************************************************}
+
+	DECLARE viewer, val
+
+	IF GLOBAL ( "TERMTYPE" ) = "GUI" THEN
+
+		define_list_browser_class ( )
+
+		CREATE OBJECT LIST_BROWSER_CLASS, viewer
+		ARRAY viewer . criteria
+
+		ARRAY_SELECT_CONCAT ( viewer . criteria        ,
+		                      self   . select_array    )
+		ARRAY_SELECT_CONCAT ( viewer . criteria        ,
+		                      self   . mandatory_array )
+
+		viewer . start_position = self . text
+
+		viewer . set_table ( "MASTER_MENU", "PROCEDURE_NUM" )
+
+		viewer . go ( ) 
+		
+		val = viewer . text
+
+		IF val <> EMPTY THEN
+
+			self . set_text ( val )
+			self . set_lastkey ( "RETURN" )
+			self . stop_prompt ( )
+
+		ENDIF
+
+	ELSE
+
+		object_invoke_class ( self                        ,
+		                      PROMPT_CLASS_FIELD_IDENTITY ,
+	        	              "BROWSE"                    )
+
+	ENDIF
+
+
+ENDROUTINE
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_get_tree_icon (        folder,
+                                         VALUE table ,
+                                         VALUE field ,
+                                         VALUE val   ,
+                                               icon1 ,
+                                               icon2 )
+{	
+*	Return back an Appropriate Icon.
+*
+*******************************************************************************}
+
+	icon1 = std_prompt_menu_icon ( val )
+	icon2 = icon1
+
+	RETURN ( TRUE )
+ 
+ENDROUTINE { std_prompt_menu_get_tree_icon }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_get_icon ( self, row )
+
+{	
+*	Return back menu Icon.
+*
+*******************************************************************************}
+
+	DECLARE icon_id
+	icon_id = SELECT 'row . table' . icon IN OBJECT row
+
+	IF BLANK( icon_id ) THEN
+		icon_id = "INT_BLANK"
+	ENDIF
+
+	RETURN ( explorer_utils_get_icon ( icon_id ) )
+ 
+ENDROUTINE { std_prompt_menu_get_icon }
+
+{******************************************************************************}
+
+ROUTINE std_prompt_menu_icon ( VALUE type )
+
+{	
+*	Return back an Appropriate Icon.
+*
+*******************************************************************************}
+
+	DECLARE icon
+
+	IF type = PROMPT_MENU_TYPE_MENU THEN
+
+		icon = PROMPT_MENU_ICON_MENU
+
+	ELSEIF type = PROMPT_MENU_TYPE_EXP THEN
+
+		icon = PROMPT_MENU_ICON_EXP
+
+	ELSEIF type = PROMPT_MENU_TYPE_PRIV THEN
+
+		icon = PROMPT_MENU_ICON_PRIV
+
+	ELSEIF type = PROMPT_MENU_TYPE_OLD THEN
+
+		icon = PROMPT_MENU_ICON_OLD
+
+	ELSEIF type = PROMPT_MENU_TYPE_AUX THEN
+
+		icon = PROMPT_MENU_ICON_AUX
+
+	ELSE
+		icon = PROMPT_MENU_ICON_NONE
+	ENDIF
+
+	RETURN ( explorer_utils_get_icon ( icon ) )
+
+ENDROUTINE
+
+
+{******************************************************************************}
+
+GLOBAL 
+ROUTINE run_procedure ( option )
+
+{
+*	Presents a prompt and executes the entered procedure number
+*
+*******************************************************************************}
+
+	DECLARE form, proc_prompt, proc_num
+
+	proc_num = EMPTY
+
+	CREATE OBJECT "STD_FORM", form
+	form . row    = 1
+	form . column = 1
+	form . width  = 50
+	form . height = 1
+	form . header = "Enter Menu Option"
+	
+	CREATE OBJECT "STD_PROMPT_TEXT", proc_prompt
+	proc_prompt . row    = 1
+	proc_prompt . column = 1
+
+	form . add_prompt( proc_prompt )
+	
+	form . start_prompt( )
+	form . wait_prompt( )
+	
+	IF form . get_last_key() = "DO" THEN
+	
+		proc_num = NUMERIC( proc_prompt . value )
+	
+		IF proc_num = ERROR THEN
+			proc_num = MENUNUMBER ( proc_prompt . value )	
+		ENDIF
+		
+	ENDIF
+	
+	form . end_prompt( )
+
+	IF proc_num <> EMPTY THEN
+		MENUPROC proc_num
+	ENDIF
+
+ENDROUTINE
+
+{******************************************************************************}
+{******************************************************************************}
+{******************************************************************************}

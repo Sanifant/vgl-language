@@ -39,7 +39,7 @@ export class MessageOutlineProvider implements vscode.DocumentSymbolProvider {
             let range = new vscode.Range(document.positionAt(selectionStart), document.positionAt(selectionEnd));
         
             switch (type) {
-                case "MESSAGE-GROUP":                     
+                case "MESSAGE GROUP":                     
                     symbol = new vscode.DocumentSymbol(
                         name,
                         type,
